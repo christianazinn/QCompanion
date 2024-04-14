@@ -4,6 +4,8 @@ from st_pages import Page,  add_indentation
 
 add_indentation()
 
+# UI CODE ---------------------------------------------------------------------------------
+
 # Create Tabs for Main Subjects
 tab_main = st.tabs(list(docs.keys()))
 

@@ -1,3 +1,4 @@
+# IMPORTS ---------------------------------------------------------------------------------
 import os
 import subprocess
 import streamlit as st
@@ -5,6 +6,8 @@ from modules.shared import shared
 from apscheduler.schedulers.background import BackgroundScheduler
 from pathlib import Path
 import sys
+
+# FUNCTIONS ---------------------------------------------------------------------------------
 
 # Initialize the scheduler
 scheduler = BackgroundScheduler()
@@ -104,10 +107,7 @@ def trigger_command(modelpath, options, use_docker):
 
     return debug_output if debug_output else "No options selected."
 
-# Old UI drawing
-# def show_medium_precision_quantization_page():
-    
-    
+# UI CODE ---------------------------------------------------------------------------------
     
 st.title("Medium Precision Quantization")
 

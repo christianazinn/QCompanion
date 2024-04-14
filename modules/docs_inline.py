@@ -1,3 +1,4 @@
+# TODO remake docs
 docs = {
     "General information": {
         "Index": """

@@ -1,7 +1,10 @@
+# IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 from cryptography.fernet import Fernet
 from pathlib import Path
 import subprocess
+
+# FUNCTIONS ---------------------------------------------------------------------------------
 
 # Function to load the existing key
 def load_key():
@@ -30,14 +33,16 @@ def generate_new_key():
 
     # Generate new key
     root_dir = Path(__file__).parent.parent
-    script_path = root_dir / 'key_generation.py'
+    script_path = root_dir / 'tools/key_generation.py'
     try:
         subprocess.run(['python3', str(script_path)], check=True)
         return "New private key generated successfully."
     except subprocess.CalledProcessError as e:
         return f"Error generating new key: {e}"
     
-# Oude manier van pagina aanroepen  
+
+# UI CODE ---------------------------------------------------------------------------------
+
 # def show_token_encrypt_page():
 st.title("Token Encryption")
 

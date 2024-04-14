@@ -1,10 +1,10 @@
-<h1 align="center">Ollama-Companion</h1>
+<h1 align="center">QCompanion</h1>
 
+<comment>
 <p align="center">
   <img src="https://i.imgur.com/ESr6xlT.png" alt="Ollama-Companion Banner" width="600">
 </p>
-
-
+</comment>
 
 
 ## Enhanced with Streamlit

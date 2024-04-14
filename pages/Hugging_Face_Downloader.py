@@ -1,9 +1,12 @@
+# IMPORTS ---------------------------------------------------------------------------------
 import os
 import subprocess
 import streamlit as st
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from pathlib import Path
+
+# FUNCTIONS ---------------------------------------------------------------------------------
 
 # Initialize APScheduler
 scheduler = BackgroundScheduler()
@@ -80,6 +83,9 @@ def get_files_from_repo(url, repo_name):
             return {}, {}
     except Exception as e:
         return {}, {}
+    
+
+# UI CODE ---------------------------------------------------------------------------------
 
 st.title("Model Downloader")
 

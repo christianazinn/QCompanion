@@ -2,18 +2,12 @@
 import streamlit as st
 from st_pages import Page, Section, show_pages, add_page_title, add_indentation
 
+# UI CODE ---------------------------------------------------------------------------------
 
 show_pages(
     [
     Page("Homepage.py", "Home", ":house:"),
     Page("pages/Docs.py", "Docs", ":books:"),
-    Page("pages/Chat_Interface.py", "Chat Interface", ":speech_balloon:"),
-    Page("pages/OpenAI_LiteLLM.py", "OpenAI compatibility", ":robot_face:"),
-    Page("pages/Public_Endpoint.py", "Generate public url", ":globe_with_meridians:"),
-    Section("Ollama Management", icon=":llama:"),
-    Page("pages/Modelfile_Creator.py", "Create and download models", ":wrench:", in_section=True),
-    Page("pages/Model_Info.py", "Remove or view models", ":clipboard:"),
-    Page("pages/Ollama_Endpoint_Url.py", "Set Ollama network address", ":signal_strength:"),
     Section("Manually convert models", icon=":arrows_counterclockwise:"),
     Page("pages/Hugging_Face_Downloader.py", "Download model", ":inbox_tray:"),
     Page("pages/High_Precision_Quantization.py", "High Precision Quantization", ":gem:"),
