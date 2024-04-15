@@ -1,4 +1,4 @@
-# FILESTATUS: pretty much done, needs testing
+# FILESTATUS: pretty much done, needs testing. Last updated v0.1.2-pre1
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 from pathlib import Path
@@ -7,6 +7,7 @@ from util.constants import config
 from util.scheduler import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
+# TODO implement gpu offload at some point and be able to change output directory
 
 # Trigger the conversion commands
 def trigger_command(model_folder, options):
@@ -61,16 +62,17 @@ if st.button("Run Commands"):
 
 with st.expander("Step One: Model Conversion with High Precision", expanded=False):
     st.markdown("""
-    **Step One: Model Conversion with High Precision**
+    Use this page to convert models from the `safetensors` format to the `gguf` format in high precision. It runs the `llama.cpp/convert.py` script in the backend.
+                
+    **Usage Instructions**
+    
+    1. **Select a Model Folder**: Choose a folder within `llama.cpp/models` that contains the model you wish to convert.
 
+    2. **Set Conversion Options**: Select your desired conversion options from the provided checkboxes: FP32, FP16, or Q8_0, in decreasing order of quality and size.
 
-    **Conversion Process:**
+    3. **Execute Conversion**: Click the "Run Commands" button to queue a conversion job.
 
-    1. **Select a Model Folder:** Choose a folder containing the model you wish to convert, found within `llama.cpp/models`.
-    2. **Set Conversion Options:** Select the desired conversion options from the provided checkboxes (e.g., Q, Kquants).
-    3. **Docker Container Option:** Opt to use a Docker container for added flexibility and compatibility.
-    4. **Execute Conversion:** Click the "Run Commands" button to start the conversion process.
-    5. **Output Location:** Converted models will be saved in the `High-Precision-Quantization` subfolder within the chosen model folder.
+    4. **Output Location**: Converted models will be saved in the `High-Precision-Quantization` subfolder within the selected model folder.
 
     Utilize this process to efficiently convert models while maintaining high precision and compatibility with `llama.cpp`.
     """)

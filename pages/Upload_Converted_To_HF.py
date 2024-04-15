@@ -1,4 +1,4 @@
-# FILESTATUS: needs to be migrated to the New Way of Doing Things
+# FILESTATUS: needs to be migrated to the New Way of Doing Things. Last updated v0.1.0
 # IMPORTS ---------------------------------------------------------------------------------
 import os, streamlit as st
 from st_pages import add_indentation

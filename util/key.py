@@ -1,4 +1,4 @@
-# FILESTATUS: pretty much done
+# FILESTATUS: pretty much done. Last updated v0.1.1
 # IMPORTS ---------------------------------------------------------------------------------
 from cryptography.fernet import Fernet
 from pathlib import Path

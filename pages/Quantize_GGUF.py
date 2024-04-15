@@ -1,4 +1,4 @@
-# FILESTATUS: needs to be migrated to the New Way of Doing Things
+# FILESTATUS: needs to be migrated to the New Way of Doing Things. Last updated v0.1.2-pre2
 # IMPORTS ---------------------------------------------------------------------------------
 import os, subprocess, sys, streamlit as st
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -7,6 +7,8 @@ from st_pages import add_indentation
 from util.constants import config
 
 # FUNCTIONS ---------------------------------------------------------------------------------
+# TODO dont forget to implement imatrices somehow + gpu offloading, figure out --allow-requantize and --imatrix
+# TODO be able to change output directory + add support for other options like -c
 
 # Initialize the scheduler
 scheduler = BackgroundScheduler()
@@ -57,11 +59,9 @@ def trigger_command(modelpath, options):
                
     for option, selected in options.items():
         if selected:
-            volume_path = base_dir.resolve().drive   # This will be 'D:' on Windows if base_dir is on D drive
             source_path = base_dir / model_name_only / 'High-Precision-Quantization' / model_file
             modified_model_file = model_file.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')
             output_path = medium_precision_dir / f"{modified_model_file}-{option.upper()}.GGUF"
-            absolute_path = os.getcwd().replace('\\', '/')
 
             # if sys.platform == "linux":
             #    command = [str(base_dir.parent / 'quantize'), str(source_path), str(output_path), option]
@@ -102,18 +102,16 @@ if run_commands:
         # This should not happen, but we include it for robustness
         st.error("Unexpected condition: No options selected.")
 
-with st.expander("Step Two: Model Quantization Q and Kquants", expanded=False):
+with st.expander("Step Two: Model Quantization - Q, K, and I-quants", expanded=False):
     st.markdown("""
-    **Step Two: Model Quantization Q and Kquants**
+    After having converted your model to a high-precision format, you may want to quantize it further to compress it and reduce its size. This page runs the `llama.cpp/quantize` script in the backend and supports any quantizations supported by your build of llama.cpp.
 
-    In this step, you will perform model quantization using Q and Kquants. The files found in the `llama.cpp/models/modelname/High-Precision-Quantization` folder will be displayed here.
+    1. **Select GGUF File**: Choose the GGUF file you wish to quantize from the dropdown list.
 
-    **Instructions:**
+    2. **Quantization Options**: Check the boxes next to the quantization options you want to apply. Q, K, and I-quants are supported.
 
-    1. Select the GGUF file you want to quantize from the dropdown list.
-    2. Check the boxes next to the quantization options you want to apply (Q, Kquants).
-    3. Choose whether to use the native `llama.cpp` or a Docker container for compatibility.
-    4. Click the "Run Selected Commands" button to schedule and execute the quantization tasks.
-    5. The quantized models will be saved in the `/modelname/Medium-Precision-Quantization` folder.
+    3. **Run Quantization**: Click the "Run Selected Commands" button to queue the quantization jobs.
+
+    4. **Save Location**: The quantized models will be saved in the `/modelname/Medium-Precision-Quantization` folder.
     """)
 

@@ -1,5 +1,5 @@
 # main.py
-# Version 0.1.2-pre1: Convert_Safetensors done, need to test Hugging_Face_Downloader.py with new queuer, 
+# Version 0.1.2-pre2: Still need to test Hugging_Face_Downloader.py with new queuer, updated semantics, wrote Queue GUI and that needs testing
 import streamlit as st
 from st_pages import Page, Section, show_pages, add_indentation
 

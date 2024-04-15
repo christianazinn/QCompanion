@@ -1,4 +1,4 @@
-# FILESTATUS: needs to be migrated to the New Way of Doing Things
+# FILESTATUS: completed, needs testing. Last updated v0.1.2-pre1
 # IMPORTS ---------------------------------------------------------------------------------
 import requests, streamlit as st
 from pathlib import Path
@@ -6,6 +6,9 @@ from st_pages import add_indentation
 from util.scheduler import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
+# TODO be able to change output directory
+# TODO test how fast this is because I don't think this is parallelized??? 
+# TODO maybe you need to make another scheduler for just download jobs while the other is used for conversion/quantization/finetuning jobs
 
 # write the download task to the queue
 def queue_command(file_url, download_path, filename):
@@ -79,21 +82,17 @@ if st.button("Download Files"):
 
 with st.expander("How to Download Model Files from Hugging Face", expanded=False):
     st.markdown("""
-    **How to Download Model Files from Hugging Face**
+    1. **Visit the Model Page**: Go to the Hugging Face model page you wish to download. For example: [MistralAI/Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2).
 
-    - First, visit the Hugging Face model page that you want to download. For example, if you want to download the model at this link: [https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2).
+    2. **Copy Model Path**: On the model page, locate the icon next to the username of the model's author (usually a clipboard or copy symbol). Click to copy the model path, e.g., `mistralai/Mistral-7B-Instruct-v0.2`.
 
-    - On the model page, locate the icon next to the username of the model's author. This icon typically looks like a clipboard or a copy symbol. Click on this icon to copy the Username/RepositoryName, which in this example is `mistralai/Mistral-7B-Instruct-v0.2`.
+    3. **Paste in the Input Field**: Paste the copied model path directly into the designated input field in your application.
 
-    - Paste the copied Username/RepositoryName `mistralai/Mistral-7B-Instruct-v0.2` directly into the input field.
+    4. **Get File List**: Click the "Get file list" button to retrieve a list of available files in this repository.
 
-    - Click the "Get file list" button or option to retrieve the list of files available in this repository.
+    5. **Review File List**: Ensure the list contains the correct model files you wish to download. These will usually be `safetensors` and related files.
 
-    - Review the list of files to ensure you have the correct model files that you want to download.
+    6. **Download Model**: Click the "Download Model" button to queue a download job for the selected files.
 
-    - Finally, click the "Download Model" button or option to initiate the download process for the selected model files.
-
-    - The model files will be saved in the `llama.cpp/models` directory on your device.
-
-    - Now you have successfully downloaded the model files from Hugging Face, and they are stored in the `llama.cpp/models` directory for your use.
+    7. **File Storage**: The model files will be saved in the `llama.cpp/models` directory on your device.
     """)

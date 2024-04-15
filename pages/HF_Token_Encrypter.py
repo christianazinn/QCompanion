@@ -1,4 +1,4 @@
-# FILESTATUS: unknown, needs testing
+# FILESTATUS: unknown, needs testing. Last updated v0.1.0
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 from st_pages import add_indentation

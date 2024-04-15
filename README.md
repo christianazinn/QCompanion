@@ -1,147 +1,91 @@
-<comment>FILESTATUS: Needs to be pretty much entirely rewritten.</comment>
+[//]: # FILESTATUS: Needs to be pretty much entirely rewritten. Last updated v0.1.2-pre2
+
 <h1 align="center">QCompanion</h1>
 
-<comment>
-<p align="center">
-  <img src="https://i.imgur.com/ESr6xlT.png" alt="Ollama-Companion Banner" width="600">
-</p>
-</comment>
+## About QCompanion
 
+QCompanion is a fork of [Luxadevi/Ollama-Companion](https://github.com/Luxadevi/Ollama-Companion) modified to remove the Ollama components and support a more versatile quantization and finetuning workload. It's built using Streamlit to provide a web interface to a robust scheduling system that queues jobs in [llama.cpp](https://github.com/ggerganov/llama.cpp) and [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) for model quantization and finetuning, respectively, with Lilac integration coming soon. Fork it yourself or run it vanilla - your choice.
 
-## Enhanced with Streamlit
+### About the scheduler
 
-Ollama-Companion is developed to enhance the interaction and management of Ollama and other large language model (LLM) applications. It aims to support all Ollama API endpoints, facilitate model conversion, and ensure seamless connectivity, even in environments behind NAT. This tool is crafted to construct a versatile and user-friendly LLM software stack, meeting a diverse range of user requirements.
+QCompanion is designed around its scheduling system, where you can schedule jobs and leave them to run later. All jobs use the same queue, from conversion to quantization to finetuning (except maybe downloading, that's a WIP), so you can leave your PC on overnight or while you're away and not worry about parallel crashes or anything. You can also edit the queue directly (e.g. to add custom commands not supported by the GUI app) by editing `util/queue.txt`.
 
-Transitioning from Gradio to Streamlit necessitated the development of new tunneling methods to maintain compatibility with Jupyter Notebooks, like Google Colab.
-
-Explore our Colab Integration to set up the companion within minutes and obtain a public-facing URL.
-
-Interact with Ollama API without typing commands and using a interface to manage your models.
-Run Ollama or connect to a client an use this WebUI to manage.
-### How to Run
+## How to Run
 
 ### All-in-one installer ###
- 
-
 
 Clone the repository:
-
-
 ```
-git clone https://github.com/Luxadevi/Ollama-Companion.git
-```
-**Make the linux and mac install script executeable**
-```
+git clone https://github.com/christianazinn/QCompanion.git
 sudo chmod +x install.sh
-```
-**Start the linux installer.sh**
-```
 ./install.sh
 ```
 
-## Starting Ollama-Companion
-To start the Companion with a public url for example when you want to share the webpage with others or using this on a service like Colab.
-**Use the command.**
-```
-$ ./start.sh
-```
-Starting the Companion on a local 127.0.0.1:8501 instance run
+### Starting QCompanion ###
+To start QCompanion locally, run
 ```
 streamlit run Homepage.py
 ```
+or
+```
+./start.sh -local
+```
+to run QCompanion on localhost:8501. To serve QCompanion publicly over a Cloudflare tunnel, run
+```
+./start.sh
+```
+without the -local flag.
 
-**Note**: Windows support is currently unavailable for running Ollama, but you can run the companion from a Windows client for local quantization and management. You can also manage a remote Ollama instance by setting the Ollama endpoint in the UI.
+**Note**: Windows support is currently unavailable. This project is a work in progress and both llama.cpp and LLaMA-Factory are compatible with Windows, but focus will be on adding more functionality before porting to Windows. In the meantime, you can run QCompanion on your Windows machine via the [Windows Subsystem for Linux.](https://learn.microsoft.com/en-us/windows/wsl/install)
 
-### Add Your Own Modules
-Develop your own Streamlit components and integrate them into Ollama-Companion. See examples using LangChain and other software stacks within Streamlit.
-<p align="center">
-  <img src="https://i.imgur.com/maRdTU6.png" alt="Ollama-Companion Second Image">
-</p>
+## Add Your Own Modules
+You can develop your own [Streamlit](https://streamlit.io/) components and integrate them into Ollama-Companion in the `pages` subdirectory. Add them to the page list in `Homepage.py` to be able to view them from the app itself. Be aware of the existence of the `utils` subdirectory and make good use of the stuff that's already built.
 
-## LiteLLM Proxy Management
+## How to Download Model Files from HuggingFace
 
-### Overview
-This part allows you to manage and interact with the LiteLLM Proxy, which is used to convert over 100 LLM providers to the OpenAI API standard. 
+To download model files from HuggingFace, follow these steps:
 
-Check LiteLLM out at [LiteLLM proxy ](https://litellm.ai/) 
+1. **Visit the Model Page**: Go to the Hugging Face model page you wish to download. For example: [MistralAI/Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2).
 
+2. **Copy Model Path**: On the model page, locate the icon next to the username of the model's author (usually a clipboard or copy symbol). Click to copy the model path, e.g., `mistralai/Mistral-7B-Instruct-v0.2`.
 
-### LiteLLM Proxy Controls
-
-- **Start LiteLLM Proxy**: Click this button to start the LiteLLM Proxy. The proxy will run in the background and facilitate the conversion process.
-- **Read LiteLLM Log**: Use this button to read the LiteLLM Proxy log, which contains relevant information about its operation.
-- **Start Polling**: Click to initiate polling. Polling checks for updates to the ollama API and adds any new models to the configuration.
-- **Stop Polling**: Use this button to stop polling for updates.
-- **Kill Existing LiteLLM Processes**: If there are existing LiteLLM processes running, this button will terminate them.
-- **Free Up Port 8000**: Click this button to free up port 8000 if it's currently in use.
-
-*Please note that starting the LiteLLM Proxy and performing other actions may take some time, so be patient and wait for the respective success messages.*
-
-### LiteLLM Proxy Log
-
-The "Log Output" section will display relevant information from the LiteLLM Proxy log, providing insights into its operation and status.
-
-## How to Download Model Files from Hugging Face
-
-To download model files from Hugging Face, follow these steps:
-
-1. **Visit the Model Page**: Go to the Hugging Face model page you wish to download. For example: [Mistralai/Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2).
-
-2. **Copy Username/RepositoryName**: On the model page, locate the icon next to the username of the model's author (usually a clipboard or copy symbol). Click to copy the Username/RepositoryName, e.g., `mistralai/Mistral-7B-Instruct-v0.2`.
-
-3. **Paste in the Input Field**: Paste the copied Username/RepositoryName directly into the designated input field in your application.
+3. **Paste in the Input Field**: Paste the copied model path directly into the designated input field in your application.
 
 4. **Get File List**: Click the "Get file list" button to retrieve a list of available files in this repository.
 
-5. **Review File List**: Ensure the list contains the correct model files you wish to download.
+5. **Review File List**: Ensure the list contains the correct model files you wish to download. These will usually be `safetensors` and related files.
 
-6. **Download Model**: Click the "Download Model" button to start the download process for the selected model files.
+6. **Download Model**: Click the "Download Model" button to queue a download job for the selected files.
 
 7. **File Storage**: The model files will be saved in the `llama.cpp/models` directory on your device.
 
-By following these steps, you have successfully downloaded the model files from Hugging Face, and they are now stored in the `llama.cpp/models` directory for your use.
+## How to Convert Models
 
+From a `safetensors` model in HuggingFace format, you'll need to convert and quantize it to `gguf` format for use in llama.cpp and related applications. To do this, follow these steps:
 
-## How to convert Models
-
-## Step One: Model Conversion with High Precision
-
-### Conversion Process
+### Step One: Model Conversion with High Precision
 
 1. **Select a Model Folder**: Choose a folder within `llama.cpp/models` that contains the model you wish to convert.
 
-2. **Set Conversion Options**: Select your desired conversion options from the provided checkboxes, F32 F16 or Q8_0.
+2. **Set Conversion Options**: Select your desired conversion options from the provided checkboxes: FP32, FP16, or Q8_0, in decreasing order of quality and size.
 
-3. **Docker Container Option**: Optionally, use a Docker container for added flexibility and compatibility.
+3. **Execute Conversion**: Click the "Run Commands" button to queue a conversion job.
 
-4. **Execute Conversion**: Click the "Run Commands" button to start the conversion process.
+4. **Output Location**: Converted models will be saved in the `High-Precision-Quantization` subfolder within the selected model folder.
 
-5. **Output Location**: Converted models will be saved in the `High-Precision-Quantization` subfolder within the selected model folder.
-
-Utilize this process to efficiently convert models while maintaining high precision and compatibility with `llama.cpp`.
-
-## Step Two: Model Quantization Q and Kquants
-
-### Quantization Instructions
+### Step Two: Model Quantization - Q, K, and I-quants
 
 1. **Select GGUF File**: Choose the GGUF file you wish to quantize from the dropdown list.
 
-2. **Quantization Options**: Check the boxes next to the quantization options you want to apply (Q, Kquants).
+2. **Quantization Options**: Check the boxes next to the quantization options you want to apply. Q, K, and I-quants are supported.
 
-3. **Execution Environment**: Choose to use either the native `llama.cpp` or a Docker container for compatibility.
+3. **Run Quantization**: Click the "Run Selected Commands" button to queue the quantization jobs.
 
-4. **Run Quantization**: Click the "Run Selected Commands" button to schedule and execute the quantization tasks.
+4. **Save Location**: The quantized models will be saved in the `/modelname/Medium-Precision-Quantization` folder.
 
-5. **Save Location**: The quantized models will be saved in the `/modelname/Medium-Precision-Quantization` folder.
-
-Follow these steps to perform model quantization using Q and Kquants, saving the quantized models in the specified directory.
-Schedule multiple options in a row they will remember and run eventually.
-
-## Model Upload Instructions
+## How to Upload Models
 
 Use this section to securely upload your converted models to Hugging Face.
-
-### Steps for Uploading Models
 
 1. **Select a Model**: Choose a model from the dropdown list. These models are located in the `llama.cpp/models` directory.
 
@@ -159,43 +103,24 @@ Use this section to securely upload your converted models to Hugging Face.
 
 After completing these steps, your uploaded models will be accessible at `https://huggingface.co/your-username/your-repo-name`.
 
-## Try Ollama-Companion
-Try ollama Companion deployed on google Colab, with our Colab Notebooks and deploy a instance within minutes. This is available on https://github.com/Luxadevi/Ollama-Colab-Integration
+## Upcoming Functionality
 
+Coming soon, we have:
 
+- Importance matrix (imatrix) support for quantization
 
+- Options to set custom output directory and more command-line arguments (e.g. `-c`, `-b`)
 
-### Core Features
+- LLaMA-Factory integration for finetuning
 
-#### Streamlit-Powered Interface
-- **Intuitive and Responsive UI**
-- **Advanced Modelfile Management**
-- **Dynamic UI Building Blocks**
+- Lilac integration for dataset management
 
-#### Model Compatibility and Conversion
-- **Download and Convert PyTorch Models from Huggingface**
-- **Multiple Format Conversion Options**
+- GPU offload for select tasks
 
-#### Enhanced Connectivity and Sharing
-- **Easy API Connectivity via Secure Tunnels**
-- **Options for Sharing and Cloud Testing**
-- **Accessible from Any Network Setup**
+- Ability to queue jobs for files that don't yet exist
 
-#### Efficient Workflow Management
-- **Easy Model Upload to Huggingface**
-- **Capability to Queue Multiple Workloads**
+**Check the docs for more information!**
 
-#### Security and Configuration
-- **Integrated LLAVA Image Analysis**
-- **Configurable Security Features**
-- **Advanced Token Encryption**
-
-### Future Directions and Contributions
-
-We are dedicated to the continuous enhancement of Ollama-Companion, with a focus on user experience and expanded functionality.
-
-
-**Check the docs for more information**
 ### License
 
 Licensed under the Apache License.

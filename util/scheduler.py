@@ -1,4 +1,4 @@
-# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality
+# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality. Last updated v0.1.2-pre1
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 from datetime import datetime
@@ -10,7 +10,8 @@ import subprocess, streamlit as st, os, threading
 # the scheduler singleton class (do i need st.cache_resource here?)
 @st.cache_resource
 class Scheduler:
-    # THREAD SAFETY STUFF
+
+    # THREAD SAFETY STUFF + INITIALIZATION -------------------------------------------------
     _instance = None
     _lock = threading.Lock()
 
@@ -35,6 +36,8 @@ class Scheduler:
         self.lastLog = ""
         # implementation of a way to delete partially downloaded files
         self.downloaded_files = []
+
+    # MANIPULATORS ------------------------------------------------------------------------
 
     # toggle active status (i.e. pause/unpause)
     def toggle(self):
@@ -76,6 +79,23 @@ class Scheduler:
         with open(self.outPath, "w") as f:
             f.write("")
 
+    # switch the jobs at index posiiton1 and position2
+    # this shouldn't actually be necessary with how we're going to run the reordering
+    def rearrange_jobs(self, position1, position2):
+        with open(self.queuePath, "r") as f:
+            lines = f.readlines()
+        lines[position1], lines[position2] = lines[position2], lines[position1]
+        with open(self.queuePath, "w") as f:
+            f.writelines(lines)
+
+    # this is the implementation we'll actually use
+    # write the jobs back to the queue in the order given by the positions dict
+    def rearrange_all_jobs(self, positions):
+        # TODO write because I don't know what the format returned by streamlit-sortables is
+        pass
+
+    # ACCESSORS ---------------------------------------------------------------------------
+
     # return the queue as a list[str]
     def get_queue(self):
         with open(self.queuePath, "r") as f:
@@ -100,14 +120,8 @@ class Scheduler:
                 f.writelines(lines)
             return job.strip().split(" ")
         return None
-
-    # switch the jobs at index posiiton1 and position2
-    def rearrange_jobs(self, position1, position2):
-        with open(self.queuePath, "r") as f:
-            lines = f.readlines()
-        lines[position1], lines[position2] = lines[position2], lines[position1]
-        with open(self.queuePath, "w") as f:
-            f.writelines(lines)
+    
+    # CONTROL FLOW ------------------------------------------------------------------------
 
     # the main function to run the next job in the queue
     def run_next_job(self):
@@ -135,7 +149,7 @@ class Scheduler:
                 self.mostRecentError = f"Error in task execution: {e}"
                 self.active = False
 
-                clear_downloaded_files()
+                self.clear_downloaded_files()
 
                 # log the job as failed
                 with open(self.outPath, "a") as f:
@@ -153,7 +167,7 @@ class Scheduler:
     # optional argument to retain the job in the queue or to remove it and log it
     def terminate(self, requeue=False):
         self.job.terminate()
-        clear_downloaded_files()
+        self.clear_downloaded_files()
         # log the job as terminated if not requeue
         if not requeue:
             with open(self.outPath, "a") as f:
@@ -163,16 +177,18 @@ class Scheduler:
         else:
             self.add_job(self.command, 0)
 
+    # UTILS -------------------------------------------------------------------------------
+
     # return the current time for logging purposes
     def time(self):
         return datetime.now().strftime("%Y-%m-$d %H:%M:%S")
 
-# clear all partially downloaded files - only required for download tasks
-def clear_downloaded_files(self):
-    for file_path in self.downloaded_files:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-    self.downloaded_files.clear()
+    # clear all partially downloaded files - only required for download tasks
+    def clear_downloaded_files(self):
+        for file_path in self.downloaded_files:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        self.downloaded_files.clear()
 
 # accessor for the scheduler singleton
 @st.cache_resource

@@ -1,4 +1,4 @@
-# FILESTATUS: pretty much done but needs to have docs written in util.docs_inline
+# FILESTATUS: pretty much done but needs to have docs written in util.docs_inline. Last updated v0.1.0
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 from util.docs_inline import docs
