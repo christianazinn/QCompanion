@@ -1,3 +1,4 @@
+# FILESTATUS: needs to be entirely rewritten for QCompanion
 # TODO remake docs
 docs = {
     "General information": {

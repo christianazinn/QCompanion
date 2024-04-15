@@ -1,3 +1,4 @@
+<comment>FILESTATUS: Needs to be pretty much entirely rewritten.</comment>
 <h1 align="center">QCompanion</h1>
 
 <comment>

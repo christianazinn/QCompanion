@@ -1,3 +1,4 @@
+# FILESTATUS: pretty much done but needs to have docs written in util.docs_inline
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 from util.docs_inline import docs

@@ -1,20 +1,27 @@
+# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 from datetime import datetime
-import subprocess, streamlit as st, os
+import subprocess, streamlit as st, os, threading
 
 # FUNCTIONS ---------------------------------------------------------------------------------
-
-# accessor for the scheduler singleton
-@st.cache_resource
-def scheduler():
-    return Scheduler()
-
-# TODO commands are actually lists of strings so you may need to refactor to handle that
 
 # the scheduler singleton class (do i need st.cache_resource here?)
 @st.cache_resource
 class Scheduler:
+    # THREAD SAFETY STUFF
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        if cls._instance is None: 
+            with cls._lock:
+                # Another thread could have created the instance
+                # before we acquired the lock. So check that the
+                # instance is still nonexistent.
+                if not cls._instance:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
 
     # constructor: set up basic attributes
     def __init__(self):
@@ -38,7 +45,8 @@ class Scheduler:
         # the simple one
         if position == -1:
             with open(self.queuePath, "a") as f:
-                f.write(''.join(job + ["\n"]))
+                # commands are lists of strings
+                f.write(' '.join(job + ["\n"]))
         # the slightly less simple one
         else:
             with open(self.queuePath, "r") as f:
@@ -141,3 +149,13 @@ class Scheduler:
     # return the current time for logging purposes
     def time(self):
         return datetime.now().strftime("%Y-%m-$d %H:%M:%S")
+
+# accessor for the scheduler singleton
+@st.cache_resource
+def get_scheduler():
+    return Scheduler()
+
+# more thread safety?
+# this is a holdover from the original code where each page had its own scheduler
+# that was definitely thread safe. i'm not so sure anymore lmao
+# threading.Thread(target=get_scheduler, daemon=True).start()

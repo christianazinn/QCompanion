@@ -1,37 +1,23 @@
+# FILESTATUS: pretty much done, needs testing
 # IMPORTS ---------------------------------------------------------------------------------
-import subprocess, threading, queue, streamlit as st
+import streamlit as st
 from pathlib import Path
-from apscheduler.schedulers.background import BackgroundScheduler
 from st_pages import add_indentation
 from util.constants import config
 from util.scheduler import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
-"""
-# Initialize queue
-command_queue = queue.Queue()
-
-def process_queue():
-    if not command_queue.empty():
-        model_folder, out_type = command_queue.get()
-        result = run_command(model_folder, out_type)
-        print(result)
-        command_queue.task_done()
-
-# Set up APScheduler
-scheduler = BackgroundScheduler()
-scheduler.add_job(process_queue, 'interval', seconds=10)  # Adjust the interval as needed
-scheduler.start()
-
-# Initialize queue and start a background thread for processing commands
-"""
+def trigger_command(model_folder, options):
+    if not any(options.values()):
+        return "Error: No quantization type selected."
+    for option in options:
+        if options[option]:
+            queue_command(model_folder, option.lower())
+    return "Commands queued. They will run sequentially."
 
 # TODO fix this up and add a different command for each outtype
-def run_command(model_folder, q):
-    for option in q:
-        if q[option]:
-            out_type = option.lower()
+def queue_command(model_folder, out_type):
     base_dir = Path("llama.cpp/models")
     input_dir = base_dir / model_folder
     target_dir = input_dir / "High-Precision-Quantization"
@@ -39,33 +25,18 @@ def run_command(model_folder, q):
     target_dir.mkdir(parents=True, exist_ok=True)
     
     # Correct path for convert.py
-    convert_script_path = base_dir.parent / "convert.py"  # Assuming convert.py i
+    convert_script_path = base_dir.parent / "convert.py" # Assuming convert.py is in llama.cpp
     
     command = [
         "python3", str(convert_script_path),
         str(input_dir),
         "--outfile", str(target_dir / output_file),
-        "--outtype", out_type.lower()
+        "--outtype", out_type
     ]
-    return command
-    return f"python3 {str(convert_script_path)} {str(input_dir)} --outfile {str(target_dir / output_file)} --outtype {out_type.lower()}"
 
-    """
-    try:
-        subprocess.run(command, check=True)
-        return "Command completed successfully."
-    except subprocess.CalledProcessError as e:
-        return f"Error in command execution: {e}"
-
-
-def trigger_command(model_folder, options):
-    if not any(options.values()):
-        return "Error: No quantization type selected."
-    for option in options:
-        if options[option]:
-            command_queue.put((model_folder, option.lower()))
-    return "Commands queued. They will run sequentially."
-"""
+    # add to scheduler
+    schedule = get_scheduler()
+    schedule.add_job(command)
 
 
 # UI CODE ---------------------------------------------------------------------------------
@@ -84,10 +55,8 @@ if st.button("Run Commands"):
     if not any(options.values()):
         st.error("Please select at least one quantization type before running commands.")
     else:
-        # status = trigger_command(model_folder, options)
-        schedule = scheduler()
-        schedule.add_job(run_command(model_folder, options))
-        # st.text(status)
+        status = trigger_command(model_folder, options)
+        st.text(status)
 
 
 with st.expander("Step One: Model Conversion with High Precision", expanded=False):
@@ -105,6 +74,3 @@ with st.expander("Step One: Model Conversion with High Precision", expanded=Fals
 
     Utilize this process to efficiently convert models while maintaining high precision and compatibility with `llama.cpp`.
     """)
-
-# Start the thread to process commands
-# threading.Thread(target=process_queue, daemon=True).start()
