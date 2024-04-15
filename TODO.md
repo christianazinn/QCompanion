@@ -30,3 +30,6 @@ test the actual file downloads
 test whether it works fine mixing conversion and download jobs
 test cancelling file downloads midway
 test whether it's actually parallelized???
+
+test pre3 Quantize_GGUF and etc
+test paths.py and make sure it functions as expected after having removed the other code regarding finding the directories

@@ -1,17 +1,16 @@
-# FILESTATUS: needs to be migrated to the New Way of Doing Things. Last updated v0.1.0
+# FILESTATUS: needs to be migrated to the New Way of Doing Things. Last updated v0.1.2-pre3
 # IMPORTS ---------------------------------------------------------------------------------
 import os, streamlit as st
 from st_pages import add_indentation
 from huggingface_hub import HfApi
 from requests.exceptions import HTTPError
-from pathlib import Path  # Import pathlib
+from util.paths import *
 from util.key import decrypt_token
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
 # Search for the llama.cpp directory
-llama_cpp_dir, models_dir = Path("llama.cpp"), Path("llama.cpp/models")
-if not llama_cpp_dir:
+if not llama_cpp_dir():
     st.error("llama.cpp directory not found. Please check the file structure.")
 
 ## Uses username from HF Token
@@ -22,7 +21,7 @@ def get_username_from_token(token):
 
 
 # Gathers files and uploads to HuggingFace
-def upload_files_to_repo(token, models_dir, repo_name, files_to_upload, readme_content, high_precision_files, medium_precision_files, selected_model):
+def upload_files_to_repo(token, repo_name, files_to_upload, readme_content, high_precision_files, medium_precision_files, selected_model):
     try:
         api = HfApi()
         username = get_username_from_token(token)
@@ -39,7 +38,7 @@ def upload_files_to_repo(token, models_dir, repo_name, files_to_upload, readme_c
 
         # Upload README.md if content is provided
         if readme_content:
-            readme_path = Path(models_dir) / 'README.md'
+            readme_path = models_dir() / 'README.md'
             with open(str(readme_path), 'w') as readme_file:
                 readme_file.write(readme_content)
             api.upload_file(path_or_fileobj=str(readme_path), path_in_repo='README.md', repo_id=repo_id, token=token)
@@ -48,9 +47,9 @@ def upload_files_to_repo(token, models_dir, repo_name, files_to_upload, readme_c
         # Upload selected files
         for file_name in files_to_upload:
             if file_name in high_precision_files.get(selected_model, []):
-                folder_path = Path(models_dir) / selected_model / "High-Precision-Quantization"
+                folder_path = models_dir() / selected_model / "High-Precision-Quantization"
             elif file_name in medium_precision_files.get(selected_model, []):
-                folder_path = Path(models_dir) / selected_model / "Medium-Precision-Quantization"
+                folder_path = models_dir() / selected_model / "Medium-Precision-Quantization"
             else:
                 continue
 
@@ -62,13 +61,11 @@ def upload_files_to_repo(token, models_dir, repo_name, files_to_upload, readme_c
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-
-
 # Cache the function to improve performance
 @st.cache_data
 def list_model_files(models_dir, subfolder):
     model_files = {}
-    models_dir_path = Path(models_dir)
+    models_dir_path = models_dir()
     if models_dir_path.exists() and models_dir_path.is_dir():
         for model_folder in models_dir_path.iterdir():
             specific_folder = model_folder / subfolder
@@ -77,8 +74,8 @@ def list_model_files(models_dir, subfolder):
     return model_files
 
 # List files in High-Precision and Medium-Precision folders
-high_precision_files = list_model_files(models_dir, "High-Precision-Quantization")
-medium_precision_files = list_model_files(models_dir, "Medium-Precision-Quantization")
+high_precision_files = list_model_files(models_dir(), "High-Precision-Quantization")
+medium_precision_files = list_model_files(models_dir(), "Medium-Precision-Quantization")
 
 # After calling list_model_files, check the contents
 # print("High Precision Files:", high_precision_files)
@@ -121,7 +118,6 @@ else:
 if st.button("Upload Selected Files") and hf_token:
     upload_message = upload_files_to_repo(
         token=hf_token, 
-        models_dir=models_dir, 
         repo_name=repo_name, 
         files_to_upload=selected_files, 
         readme_content=readme_content,

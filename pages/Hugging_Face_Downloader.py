@@ -1,9 +1,10 @@
-# FILESTATUS: completed, needs testing. Last updated v0.1.2-pre1
+# FILESTATUS: completed, needs testing. Last updated v0.1.2-pre3
 # IMPORTS ---------------------------------------------------------------------------------
 import requests, streamlit as st
 from pathlib import Path
 from st_pages import add_indentation
 from util.scheduler import *
+from util.paths import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 # TODO be able to change output directory
@@ -23,7 +24,7 @@ def queue_command(file_url, download_path, filename):
 # queues a download task for each file in the file_links_dict
 def trigger_command(file_links_dict, model_name):
     folder_name = model_name.split("/")[-1]
-    download_path = Path("llama.cpp/models") / folder_name
+    download_path = models_dir() / folder_name
     download_path.mkdir(parents=True, exist_ok=True)
 
     for file_name, file_url in file_links_dict.items():
