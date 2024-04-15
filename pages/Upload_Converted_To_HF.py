@@ -1,57 +1,24 @@
-import os
-import streamlit as st
+# IMPORTS ---------------------------------------------------------------------------------
+import os, streamlit as st
+from st_pages import add_indentation
 from huggingface_hub import HfApi
 from requests.exceptions import HTTPError
-from cryptography.fernet import Fernet
-from pages.HF_Token_Encrypter import load_key
 from pathlib import Path  # Import pathlib
+from util.find import find_llama_cpp_dir
+from util.key import decrypt_token
 
-# Initialize session state for selected_model
-if 'selected_model' not in st.session_state:
-    st.session_state['selected_model'] = ''
-if 'selected_files' not in st.session_state:
-    st.session_state['selected_files'] = []
-
-# Define a function to search for the llama.cpp directory
-def find_llama_cpp_dir():
-    # Search for llama.cpp directory three levels up
-    current_dir = Path(__file__).resolve().parent
-    for _ in range(3):
-        current_dir = current_dir.parent
-        llama_cpp_dir = current_dir / 'llama.cpp'
-        models_dir = llama_cpp_dir / "models"
-        if llama_cpp_dir.is_dir():
-            return llama_cpp_dir, models_dir
-
-    # If not found, search two levels down
-    current_dir = Path(__file__).resolve().parent
-    for _ in range(2):
-        current_dir = current_dir / 'llama.cpp'
-        models_dir = current_dir / "models"
-        if current_dir.is_dir():
-            return current_dir, models_dir
-
-    return None, None
+# FUNCTIONS ---------------------------------------------------------------------------------
 
 # Search for the llama.cpp directory
 llama_cpp_dir, models_dir = find_llama_cpp_dir()
 if not llama_cpp_dir:
     st.error("llama.cpp directory not found. Please check the file structure.")
 
-
-
-
 ## Uses username from HF Token
 def get_username_from_token(token):
     api = HfApi()
     user_info = api.whoami(token=token)
     return user_info['name']
-
-# Decrypt the token
-def decrypt_token(encrypted_token):
-    key = load_key()
-    f = Fernet(key)
-    return f.decrypt(encrypted_token.encode()).decode()
 
 
 # Gathers files and uploads to HuggingFace
@@ -117,18 +84,13 @@ medium_precision_files = list_model_files(models_dir, "Medium-Precision-Quantiza
 # print("High Precision Files:", high_precision_files)
 # print("Medium Precision Files:", medium_precision_files)
 
-# Old UI drawing
-# def show_model_management_page():
-# Search for the llama.cpp directory
-# llama_cpp_dir = find_llama_cpp_dir()
-# models_dir = "llama.cpp/models/"
-# high_precision_files = list_model_files(models_dir, "High-Precision-Quantization")
-# medium_precision_files = list_model_files(models_dir, "Medium-Precision-Quantization")
-
-
 def get_combined_files(model):
     # Combine files from both precision types
     return high_precision_files.get(model, []) + medium_precision_files.get(model, [])
+
+# UI CODE ---------------------------------------------------------------------------------
+
+add_indentation()
 
 # Main UI
 st.title("Upload Converted Models to HuggingFace")

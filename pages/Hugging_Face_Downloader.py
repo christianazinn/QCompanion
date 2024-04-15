@@ -1,10 +1,8 @@
 # IMPORTS ---------------------------------------------------------------------------------
-import os
-import subprocess
-import streamlit as st
-import requests
+import os, subprocess, requests, streamlit as st
 from apscheduler.schedulers.background import BackgroundScheduler
 from pathlib import Path
+from st_pages import add_indentation
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
@@ -86,6 +84,8 @@ def get_files_from_repo(url, repo_name):
     
 
 # UI CODE ---------------------------------------------------------------------------------
+
+add_indentation()
 
 st.title("Model Downloader")
 

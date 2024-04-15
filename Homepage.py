@@ -10,9 +10,11 @@ show_pages(
     Page("pages/Docs.py", "Docs", ":books:"),
     Section("Manually convert models", icon=":arrows_counterclockwise:"),
     Page("pages/Hugging_Face_Downloader.py", "Download model", ":inbox_tray:"),
-    Page("pages/High_Precision_Quantization.py", "High Precision Quantization", ":gem:"),
-    Page("pages/Medium_Precision_Quantization.py", "Medium Precision Quantization", ":heavy_plus_sign:" ),
+    Page("pages/Convert_Safetensors.py", "Convert Safetensors to High Precision", ":gem:"),
+    Page("pages/Create_IMatrix.py", "Create Importance Matrix", ":chart_with_upwards_trend:"),
+    Page("pages/Quantize_GGUF.py", "Quantize GGUF", ":heavy_plus_sign:" ),
     Page("pages/Upload_Converted_To_HF.py", "Upload model to HuggingFace", ":outbox_tray:"),
+    Page("pages/Queue_GUI.py", "Queue GUI", ":inbox_tray:"),
     Section("Extra Tools", icon=":toolbox:"),
     Page("pages/HF_Token_Encrypter.py", "Security", ":lock:"),
     ]    

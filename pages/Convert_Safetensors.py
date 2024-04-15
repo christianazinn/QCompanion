@@ -1,20 +1,14 @@
 # IMPORTS ---------------------------------------------------------------------------------
+import subprocess, threading, queue, streamlit as st
 from apscheduler.schedulers.background import BackgroundScheduler
-import subprocess
-import threading
-from pathlib import Path
-import streamlit as st
-from modules.shared import shared
-import sys
-import queue
-from tools.find import find_llama_models_dir
+from st_pages import add_indentation
+from util.constants import config
+from util.find import find_llama_models_dir
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
 # Initialize queue
 command_queue = queue.Queue()
-
-# Existing function definitions (find_llama_models_dir, run_command, trigger_command)
 
 def process_queue():
     if not command_queue.empty():
@@ -65,13 +59,15 @@ def trigger_command(model_folder, options):
 
 # UI CODE ---------------------------------------------------------------------------------
 
+add_indentation()
+
 st.title("High Precision Quantization")
 
 models_dir = Path("llama.cpp/models/")
 model_folders = [f.name for f in models_dir.iterdir() if f.is_dir()] if models_dir.exists() else ["Directory not found"]
 
 model_folder = st.selectbox("Select a Model Folder", model_folders)
-options = {option: st.checkbox(label=option) for option in shared['checkbox_high_options']}
+options = {option: st.checkbox(label=option) for option in config['checkbox_high_options']}
 
 if st.button("Run Commands"):
     if not any(options.values()):

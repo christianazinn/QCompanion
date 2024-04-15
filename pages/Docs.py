@@ -1,10 +1,11 @@
+# IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
-from modules.docs_inline import docs
-from st_pages import Page,  add_indentation
-
-add_indentation()
+from util.docs_inline import docs
+from st_pages import add_indentation
 
 # UI CODE ---------------------------------------------------------------------------------
+
+add_indentation()
 
 # Create Tabs for Main Subjects
 tab_main = st.tabs(list(docs.keys()))

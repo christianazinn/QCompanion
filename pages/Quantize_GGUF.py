@@ -1,35 +1,16 @@
 # IMPORTS ---------------------------------------------------------------------------------
-import os
-import subprocess
-import streamlit as st
-from modules.shared import shared
+import os, subprocess, sys, streamlit as st
 from apscheduler.schedulers.background import BackgroundScheduler
 from pathlib import Path
-import sys
+from st_pages import add_indentation
+from util.constants import config
+from util.find import find_llama_cpp_dir
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
 # Initialize the scheduler
 scheduler = BackgroundScheduler()
 scheduler.start()
-
-def find_llama_cpp_dir():
-    # Search for llama.cpp directory two levels up
-    current_dir = Path(__file__).resolve().parent
-    for _ in range(2):
-        current_dir = current_dir.parent
-        llama_cpp_dir = current_dir / 'llama.cpp'
-        if llama_cpp_dir.is_dir():
-            return llama_cpp_dir
-
-    # If not found, search two levels down
-    current_dir = Path(__file__).resolve().parent
-    for _ in range(2):
-        current_dir = current_dir / 'llama.cpp'
-        if current_dir.is_dir():
-            return current_dir
-
-    return None
 
 def list_gguf_files(models_dir):
     gguf_files = []
@@ -109,6 +90,8 @@ def trigger_command(modelpath, options, use_docker):
 
 # UI CODE ---------------------------------------------------------------------------------
     
+add_indentation()
+
 st.title("Medium Precision Quantization")
 
 models_dir = os.path.join("llama.cpp", "models")

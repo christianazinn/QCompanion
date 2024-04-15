@@ -1,47 +1,11 @@
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
-from cryptography.fernet import Fernet
-from pathlib import Path
-import subprocess
-
-# FUNCTIONS ---------------------------------------------------------------------------------
-
-# Function to load the existing key
-def load_key():
-    key_dir = Path('.') / '.key'
-    key_file_path = key_dir / 'encryption.key'
-    return key_file_path.read_bytes()
-
-# Encrypt the token
-def encrypt_token(token):
-    key = load_key()
-    f = Fernet(key)
-    encrypted_token = f.encrypt(token.encode())
-    return encrypted_token.decode()
-
-def generate_new_key():
-    key_dir = Path('.') / '.key'
-    key_file_path = key_dir / 'encryption.key'
-    
-    # Check if the key file exists and delete it
-    if key_file_path.exists():
-        try:
-            key_file_path.unlink()  # Deletes the file
-            print("Existing key file deleted.")
-        except Exception as e:
-            return f"Error deleting existing key: {e}"
-
-    # Generate new key
-    root_dir = Path(__file__).parent.parent
-    script_path = root_dir / 'tools/key_generation.py'
-    try:
-        subprocess.run(['python3', str(script_path)], check=True)
-        return "New private key generated successfully."
-    except subprocess.CalledProcessError as e:
-        return f"Error generating new key: {e}"
-    
+from st_pages import add_indentation
+from util.key import encrypt_token, generate_new_key
 
 # UI CODE ---------------------------------------------------------------------------------
+
+add_indentation()
 
 # def show_token_encrypt_page():
 st.title("Token Encryption")
