@@ -4,7 +4,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from pathlib import Path
 from st_pages import add_indentation
 from util.constants import config
-from util.find import find_llama_cpp_dir
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
@@ -30,12 +29,12 @@ def schedule_quantize_task(command):
     except subprocess.CalledProcessError as e:
         return f"Error in task execution: {e}"
 
-def trigger_command(modelpath, options, use_docker):
+def trigger_command(modelpath, options):
     if not any(options.values()):
         return "Error: Please select at least one quantization option."
 
     debug_output = ""
-    llama_cpp_dir = find_llama_cpp_dir()
+    llama_cpp_dir = Path("llama.cpp")
     if llama_cpp_dir:
         base_dir = llama_cpp_dir / 'models'
         gguf_files = list_gguf_files(base_dir)
@@ -63,22 +62,10 @@ def trigger_command(modelpath, options, use_docker):
             output_path = medium_precision_dir / f"{modified_model_file}-{option.upper()}.GGUF"
             absolute_path = os.getcwd().replace('\\', '/')
 
-            
-            if use_docker:
-                
-                docker_image = "luxaplexx/convert-compaan-ollama"
-
-                output_path_in_docker = f"/models/{model_name_only}/Medium-Precision-Quantization/{modified_model_file}-{option.upper()}.GGUF"
-                command = [
-                    "docker", "run", "--rm",
-                    "-v", f"{absolute_path}/{base_dir}:/models",
-                    docker_image, "quantize", f"/models/{model_name_only}/High-Precision-Quantization/{model_file}",
-                    str(output_path_in_docker), option
-                ]
-            if sys.platform == "linux":
-                command = [str(base_dir.parent / 'quantize'), str(source_path), str(output_path), option]
-            else:
-                command = [str(base_dir / 'quantize'), str(source_path), str(output_path), option]
+            # if sys.platform == "linux":
+            #    command = [str(base_dir.parent / 'quantize'), str(source_path), str(output_path), option]
+            # else:
+            command = [str(llama_cpp_dir / 'quantize'), str(source_path), str(output_path), option]
 
             print(command)
 
@@ -98,8 +85,7 @@ models_dir = os.path.join("llama.cpp", "models")
 gguf_files = list_gguf_files(models_dir)
 
 selected_gguf_file = st.selectbox("Select a GGUF File", gguf_files)
-options = {option: st.checkbox(label=option) for option in shared['checkbox_options']}
-use_docker = st.checkbox("Use Docker Container")
+options = {option: st.checkbox(label=option) for option in config['quantization_I'] + config['quantization_K']}
 
 run_commands = st.button("Run Selected Commands")
 
@@ -108,8 +94,8 @@ if run_commands:
     if not any(options.values()):
         st.error("Please select at least one quantization type before running commands.")
     # Proceed only if at least one quantization type is selected or if Docker is selected with a type
-    elif any(options.values()) or (use_docker and any(options.values())):
-        status = trigger_command(selected_gguf_file, options, use_docker)
+    elif any(options.values()):
+        status = trigger_command(selected_gguf_file, options)
         st.text_area("Debug Output", status, height=300)
     else:
         # This should not happen, but we include it for robustness

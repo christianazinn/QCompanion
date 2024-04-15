@@ -1,7 +1,7 @@
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 from datetime import datetime
-import subprocess, streamlit as st
+import subprocess, streamlit as st, os
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
@@ -10,19 +10,21 @@ import subprocess, streamlit as st
 def scheduler():
     return Scheduler()
 
+# TODO commands are actually lists of strings so you may need to refactor to handle that
+
 # the scheduler singleton class (do i need st.cache_resource here?)
 @st.cache_resource
 class Scheduler:
 
     # constructor: set up basic attributes
     def __init__(self):
-        path = Path(__file__)
-        self.queuePath = path + "/queue.txt"
-        self.outPath = path + "/completed.txt"
-        self.active = True
+        thispath = Path(__file__).parent
+        self.queuePath = os.path.join(thispath, "queue.txt")
+        self.outPath = os.path.join(thispath, "completed.txt")
+        self.active = False
         self.job = None
         self.command = ""
-        self.mostRecentError = ""
+        self.lastLog = ""
 
     # toggle active status (i.e. pause/unpause)
     def toggle(self):
@@ -36,7 +38,7 @@ class Scheduler:
         # the simple one
         if position == -1:
             with open(self.queuePath, "a") as f:
-                f.write(job + "\n")
+                f.write(''.join(job + ["\n"]))
         # the slightly less simple one
         else:
             with open(self.queuePath, "r") as f:
@@ -46,7 +48,7 @@ class Scheduler:
                 f.writelines(lines)
 
     # remove a job from the queue
-    def remove_job(self, job, position=-1):
+    def remove_job(self, position=-1):
         with open(self.queuePath, "r") as f:
             lines = f.readlines()
         lines.pop(position)
@@ -74,8 +76,8 @@ class Scheduler:
             return f.readlines()
         
     # return the most recent error
-    def get_error(self):
-        return self.mostRecentError
+    def get_log(self):
+        return self.log
 
     # pop the next job in the queue
     def get_next_job(self):
@@ -85,7 +87,7 @@ class Scheduler:
             job = lines.pop(0)
             with open(self.queuePath, "w") as f:
                 f.writelines(lines)
-            return job
+            return job.strip().split(" ")
         return None
 
     # switch the jobs at index posiiton1 and position2
@@ -105,14 +107,16 @@ class Scheduler:
                 self.job = subprocess.run(self.command, check=True)
                 # log the job as completed if it works
                 with open(self.outPath, "a") as f:
-                    f.write(f"Task executed successfully at {self.time()}: {self.command}\n")
+                    self.log = f"Task executed successfully at {self.time()}: {self.command}\n"
+                    f.write(self.log)
             # log errors
             except subprocess.CalledProcessError as e:
                 self.mostRecentError = f"Error in task execution: {e}"
                 self.active = False
                 # log the job as failed
                 with open(self.outPath, "a") as f:
-                    f.write(f"Error in task execution for task {self.command} at {self.time()}: {e}\n")
+                    self.log = f"Error in task execution for task {self.command} at {self.time()}: {e}\n"
+                    f.write(self.log)
  
             # automatically loop through the jobs while active but only while there are jobs
             # else you're wasting compute
@@ -128,7 +132,8 @@ class Scheduler:
         # log the job as terminated if not requeue
         if not requeue:
             with open(self.outPath, "a") as f:
-                f.write(f"Terminated task {self.command} at {self.time()}\n")
+                self.log = f"Terminated task {self.command} at {self.time()}\n"
+                f.write(self.log)
         # if requeue, add the job back to the queue
         else:
             self.add_job(self.command, 0)

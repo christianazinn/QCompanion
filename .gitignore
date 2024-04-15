@@ -3,3 +3,4 @@ logs/*
 .vscode/*
 TODO.md
 testing/*
+util/*.txt

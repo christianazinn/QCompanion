@@ -4,13 +4,12 @@ from st_pages import add_indentation
 from huggingface_hub import HfApi
 from requests.exceptions import HTTPError
 from pathlib import Path  # Import pathlib
-from util.find import find_llama_cpp_dir
 from util.key import decrypt_token
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
 # Search for the llama.cpp directory
-llama_cpp_dir, models_dir = find_llama_cpp_dir()
+llama_cpp_dir, models_dir = Path("llama.cpp"), Path("llama.cpp/models")
 if not llama_cpp_dir:
     st.error("llama.cpp directory not found. Please check the file structure.")
 

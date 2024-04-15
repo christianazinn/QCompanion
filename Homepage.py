@@ -10,7 +10,7 @@ show_pages(
     Page("pages/Docs.py", "Docs", ":books:"),
     Section("Manually convert models", icon=":arrows_counterclockwise:"),
     Page("pages/Hugging_Face_Downloader.py", "Download model", ":inbox_tray:"),
-    Page("pages/Convert_Safetensors.py", "Convert Safetensors to High Precision", ":gem:"),
+    Page("pages/Convert_Safetensors.py", "Safetensors to GGUF", ":gem:"),
     Page("pages/Create_IMatrix.py", "Create Importance Matrix", ":chart_with_upwards_trend:"),
     Page("pages/Quantize_GGUF.py", "Quantize GGUF", ":heavy_plus_sign:" ),
     Page("pages/Upload_Converted_To_HF.py", "Upload model to HuggingFace", ":outbox_tray:"),
