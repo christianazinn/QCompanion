@@ -1,4 +1,5 @@
 # main.py
+# Version 0.1.2-pre1: Convert_Safetensors done, need to test Hugging_Face_Downloader.py with new queuer, 
 import streamlit as st
 from st_pages import Page, Section, show_pages, add_indentation
 

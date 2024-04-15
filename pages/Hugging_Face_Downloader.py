@@ -1,66 +1,35 @@
 # FILESTATUS: needs to be migrated to the New Way of Doing Things
 # IMPORTS ---------------------------------------------------------------------------------
-import os, subprocess, requests, streamlit as st
-from apscheduler.schedulers.background import BackgroundScheduler
+import requests, streamlit as st
 from pathlib import Path
 from st_pages import add_indentation
+from util.scheduler import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
-# Initialize APScheduler
-scheduler = BackgroundScheduler()
-scheduler.start()
-
-# Global variables to keep track of download tasks and downloaded files
-scheduled_jobs = []
-downloaded_files = []
-
-def download_file_task(file_url, download_path, filename):
-    global downloaded_files
-    file_path = download_path / filename
+# write the download task to the queue
+def queue_command(file_url, download_path, filename):
     command = [
         "aria2c", file_url,
         "--max-connection-per-server=16", "--split=8", "--min-split-size=25M", "--allow-overwrite=true",
         "-d", str(download_path), "-o", filename,
         "--continue=true"
     ]
-    try:
-        subprocess.run(command, check=True)
-        downloaded_files.append(str(file_path))
-    except subprocess.CalledProcessError as e:
-        print(f"Error downloading {filename}: {str(e)}")
+    get_scheduler.add_job(command)
 
-def queue_download(file_links_dict, model_name):
-    global scheduled_jobs
+# queues a download task for each file in the file_links_dict
+def trigger_command(file_links_dict, model_name):
     folder_name = model_name.split("/")[-1]
-    current_dir = Path(__file__).parent
-    download_path = current_dir.parent / f"llama.cpp/models/{folder_name}"
+    download_path = Path("llama.cpp/models") / folder_name
     download_path.mkdir(parents=True, exist_ok=True)
 
     for file_name, file_url in file_links_dict.items():
         filename = Path(file_name).name
-        job = scheduler.add_job(download_file_task, args=[file_url, download_path, filename])
-        scheduled_jobs.append(job)
+        queue_command(file_url, download_path, filename)
 
     return "Download tasks have been queued."
 
-def cancel_downloads():
-    global scheduled_jobs, downloaded_files
-    for job in scheduled_jobs:
-        job.remove()
-    scheduled_jobs.clear()
-
-    for file_path in downloaded_files:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-    downloaded_files.clear()
-
-    return "All queued downloads have been cancelled and files removed."
-
-def construct_hf_repo_url(model_name):
-    base_url = "https://huggingface.co/api/models/"
-    return f"{base_url}{model_name}/tree/main"
-
+# get the files from the Hugging Face repo - kept basically the same implementation as in the original
 def get_files_from_repo(url, repo_name):
     try:
         response = requests.get(url)
@@ -82,7 +51,6 @@ def get_files_from_repo(url, repo_name):
             return {}, {}
     except Exception as e:
         return {}, {}
-    
 
 # UI CODE ---------------------------------------------------------------------------------
 
@@ -92,7 +60,7 @@ st.title("Model Downloader")
 
 model_name = st.text_input("Download PyTorch models from Huggingface", "Use the HuggingfaceUsername/Modelname")
 if st.button("Get File List"):
-    _, file_links = get_files_from_repo(construct_hf_repo_url(model_name), model_name)
+    _, file_links = get_files_from_repo(f"https://huggingface.co/api/models/{model_name}/tree/main", model_name)
     if file_links:
         st.session_state['file_links_dict'] = file_links
         files_info = "\n".join(f"{name}, Size: {size}" for name, size in file_links.items())
@@ -104,14 +72,10 @@ if st.button("Get File List"):
 
 if st.button("Download Files"):
     if 'file_links_dict' in st.session_state and st.session_state['file_links_dict']:
-        queue_message = queue_download(st.session_state['file_links_dict'], model_name)
+        queue_message = trigger_command(st.session_state['file_links_dict'], model_name)
         st.text(queue_message)
     else:
         st.error("No files to download. Please get the file list first.")
-
-if st.button("Stop Downloads"):
-    cancel_message = cancel_downloads()
-    st.text(cancel_message)
 
 with st.expander("How to Download Model Files from Hugging Face", expanded=False):
     st.markdown("""

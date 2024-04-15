@@ -6,6 +6,7 @@ import subprocess, streamlit as st, os, threading
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
+# TODO perhaps make download tasks independent of other tasks? but then you run into thread safety issues I think
 # the scheduler singleton class (do i need st.cache_resource here?)
 @st.cache_resource
 class Scheduler:
@@ -32,6 +33,8 @@ class Scheduler:
         self.job = None
         self.command = ""
         self.lastLog = ""
+        # implementation of a way to delete partially downloaded files
+        self.downloaded_files = []
 
     # toggle active status (i.e. pause/unpause)
     def toggle(self):
@@ -112,15 +115,28 @@ class Scheduler:
         # if there is a job, run it
         if self.command:
             try:
+
+                # if the job is a download task, add the file to the list of partially downloaded files
+                if self.command[0] == "aria2c":
+                    download_path = self.command[-4]
+                    filename = self.command[-2]
+                    file_path = download_path / filename
+                    self.downloaded_files.append(str(file_path))
+
                 self.job = subprocess.run(self.command, check=True)
+
                 # log the job as completed if it works
                 with open(self.outPath, "a") as f:
                     self.log = f"Task executed successfully at {self.time()}: {self.command}\n"
                     f.write(self.log)
+
             # log errors
             except subprocess.CalledProcessError as e:
                 self.mostRecentError = f"Error in task execution: {e}"
                 self.active = False
+
+                clear_downloaded_files()
+
                 # log the job as failed
                 with open(self.outPath, "a") as f:
                     self.log = f"Error in task execution for task {self.command} at {self.time()}: {e}\n"
@@ -137,6 +153,7 @@ class Scheduler:
     # optional argument to retain the job in the queue or to remove it and log it
     def terminate(self, requeue=False):
         self.job.terminate()
+        clear_downloaded_files()
         # log the job as terminated if not requeue
         if not requeue:
             with open(self.outPath, "a") as f:
@@ -149,6 +166,13 @@ class Scheduler:
     # return the current time for logging purposes
     def time(self):
         return datetime.now().strftime("%Y-%m-$d %H:%M:%S")
+
+# clear all partially downloaded files - only required for download tasks
+def clear_downloaded_files(self):
+    for file_path in self.downloaded_files:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    self.downloaded_files.clear()
 
 # accessor for the scheduler singleton
 @st.cache_resource

@@ -19,3 +19,11 @@ TODO thread safety? threading.Thread(target=process_queue, daemon=True).start()
 TODO follow page FILESTATUSes and also rework the scripts in the main directory
 TODO rewrite the little page blurbs on all pages
 TODO TEST TEST TEST!!!
+
+
+# TODO NEXT TESTS
+test Hugging_Face_Downloader.py
+test queueing downloaded files
+test the actual file downloads
+test whether it works fine mixing conversion and download jobs
+test cancelling file downloads midway

@@ -8,6 +8,7 @@ from util.scheduler import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
+# Trigger the conversion commands
 def trigger_command(model_folder, options):
     if not any(options.values()):
         return "Error: No quantization type selected."
@@ -16,7 +17,7 @@ def trigger_command(model_folder, options):
             queue_command(model_folder, option.lower())
     return "Commands queued. They will run sequentially."
 
-# TODO fix this up and add a different command for each outtype
+# Schedule the conversion command
 def queue_command(model_folder, out_type):
     base_dir = Path("llama.cpp/models")
     input_dir = base_dir / model_folder
@@ -35,8 +36,7 @@ def queue_command(model_folder, out_type):
     ]
 
     # add to scheduler
-    schedule = get_scheduler()
-    schedule.add_job(command)
+    get_scheduler().add_job(command)
 
 
 # UI CODE ---------------------------------------------------------------------------------
