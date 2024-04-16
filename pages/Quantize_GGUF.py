@@ -34,7 +34,6 @@ def trigger_command(modelpath, options):
 
     debug_output = ""
     modelpath_path = Path(modelpath)
-    # TODO I'm not convinced this logic works - write debugs
     model_name_only, model_file = modelpath_path.parts[-3], modelpath_path.name
     medium_precision_dir = models_dir() / model_name_only / 'Medium-Precision-Quantization'
     medium_precision_dir.mkdir(parents=True, exist_ok=True)
@@ -64,17 +63,24 @@ st.title("Medium Precision Quantization")
 gguf_files = list_gguf_files()
 
 selected_gguf_file = st.selectbox("Select a GGUF File", gguf_files)
-options = {option: st.checkbox(label=option) for option in config['quantization_I'] + config['quantization_K']}
+icol, kcol = st.columns(2)
+with icol:
+    st.markdown("### I-Quants")
+    ioptions = {option: st.checkbox(label=option) for option in config['quantization_I']}
+
+with kcol:
+    st.markdown("### K-Quants")
+    koptions = {option: st.checkbox(label=option) for option in config['quantization_K']}
 
 run_commands = st.button("Run Selected Commands")
 
 if run_commands:
     # Check if no quantization type options are selected
-    if not any(options.values()):
+    if not any(ioptions.values()) or not any(koptions.values()):
         st.error("Please select at least one quantization type before running commands.")
     # Proceed only if at least one quantization type is selected or if Docker is selected with a type
-    elif any(options.values()):
-        status = trigger_command(selected_gguf_file, options)
+    elif any(ioptions.values()) or any(koptions.values()):
+        status = trigger_command(selected_gguf_file, ioptions | koptions)
         st.text_area("Debug Output", status, height=300)
     else:
         # This should not happen, but we include it for robustness

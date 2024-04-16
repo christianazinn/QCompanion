@@ -1,5 +1,5 @@
 # main.py
-# Version 0.1.2-pre4: Conversion of most pages to new scheduler complete, testing complete, wrote Queue GUI and that needs testing
+# Version 0.1.2-pre5: Aesthetics and minor fixes
 import streamlit as st
 st.set_page_config(layout="wide")
 from st_pages import Page, Section, show_pages, add_indentation

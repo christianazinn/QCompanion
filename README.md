@@ -1,5 +1,3 @@
-[//]: # FILESTATUS: Needs to be pretty much entirely rewritten. Last updated v0.1.2-pre2
-
 <h1 align="center">QCompanion</h1>
 
 ## About QCompanion

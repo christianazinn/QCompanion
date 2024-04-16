@@ -1,15 +1,13 @@
 #!/bin/bash
-# this is the Ollama-Companion bash installer for Linux 
-# This installer is meant to be ran from a direct download or from the ollama-companion repo
-
-
+# this is the QCompanion bash installer for Linux 
+# This installer is meant to be ran from a direct clone of the QCompanion repo and absolutely nowhere else.
+# If you need to update, please reclone the repo and run the installer again and move your llama.cpp/models folder.
 
 # These packages are needed to install or use ollama/companion.
 COMMON_PACKAGES="aria2 make gcc git pciutils curl" 
 VERSION="4"
-LOGFILE="logs/installation.log"
 
-# Function to install packages per distrobution type.
+# Function to install packages per distribution type.
 install_packages() {
     if [[ "$1" == "Ubuntu" || "$1" == "Debian" ]]; then
         sudo apt update
@@ -79,56 +77,6 @@ pip_dependencies() {
     echo "Dependencies installed from requirements.txt."
 }
 
-
-# Detect the OS
-OS="Unknown"
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    OS=$NAME
-fi
-
-# Function to read the installation type from the log file
-read_installation_type() {
-    if [ -f "$LOGFILE" ]; then
-        local installed_type=$(sed -n '2p' "$LOGFILE")
-        echo $installed_type
-    else
-        echo "none"
-    fi
-}
-
-# Function to determine if an upgrade is needed
-is_upgrade_needed() {
-    local current_installation=$(read_installation_type)
-    local new_installation=$1
-
-    case $current_installation in
-        minimal)
-            [[ "$new_installation" == "standard" || "$new_installation" == "large" ]]
-            ;;
-        standard)
-            [[ "$new_installation" == "large" ]]
-            ;;
-        interactive)
-            return 0 # Always rerun interactive
-            ;;
-        *)
-            return 1 # No upgrade needed or unrecognized type
-            ;;
-    esac
-}
-# Function to clone ollama-companion repository
-clone_ollama_companion() {
-    current_dir=$(basename "$PWD")
-    if [ "$current_dir" != "Ollama-Companion" ]; then
-        git clone https://github.com/luxadevi/Ollama-Companion.git
-        cd Ollama-Companion
-        echo "Cloned ollama-companion and changed directory to ollama-companion"
-    else
-        echo "Already inside ollama-companion directory, skipping clone."
-    fi
-}
-
 # Function to clone llama.cpp repository and run make in its directory
 clone_and_make_llama_cpp() {
     git clone https://github.com/ggerganov/llama.cpp.git
@@ -136,164 +84,10 @@ clone_and_make_llama_cpp() {
     echo "Cloned llama.cpp and ran make in the llama.cpp directory"
 }
 
-# Interactive options
-# Function to install Ollama
-install_ollama() {
-    read -p "Do you want to install Ollama on this computer? (y/n) " answer
-    case $answer in
-        [Yy]* )
-            curl https://ollama.ai/install.sh | sh
-            echo "Ollama installed on this host."
-            ;;
-        * )
-            echo "Ollama installation skipped."
-            ;;
-    esac
-}
-# Function to instal Ollama headless
-install_ollama_headless(){
-    curl https://ollama.ai/install.sh | sh
-    echo "Ollama Installed"
-}
-
-
-clean_build_llama_cpp() {
-    echo "Do you want to clean build llama.cpp? (yes/no)"
-    read clean_build_response
-    if [[ $clean_build_response == "yes" ]]; then
-	git clone http://github.com/ggerganov/llama.cpp.git
-        make -C llama.cpp
-        echo "Clean build of llama.cpp completed."
-    else
-        echo "Skipping clean build of llama.cpp."
-    fi
-}
-# Function to help you install python3.10 interactively
-interactive_check_python() {
-    PYTHON_VERSION=$(python3 --version 2>/dev/null | grep -oP '(?<=Python )\d+\.\d+')
-    if [[ $PYTHON_VERSION < 3.10 ]]; then
-        echo "Python 3.10 or 3.11 is required. Would you like to install it? (yes/no)"
-        read install_python
-        if [[ $install_python == "yes" ]]; then
-            case $OS in
-                "Ubuntu"|"Debian")
-                    sudo apt install -y python3.10 python3.10-venv || sudo apt install -y python3.11 python3.11-venv
-                    ;;
-                "Arch")
-                    sudo pacman -S python3.10 python3.10-venv || sudo pacman -S python3.11 python3.11-venv
-                    ;;
-                "RedHat")
-                    sudo yum install -y python3.10 python3.10-venv || sudo yum install -y python3.11 python3.11-venv
-                    ;;
-                *)
-                    echo "Unsupported distribution for automatic Python installation."
-                    ;;
-            esac
-        fi
-    else
-        echo "Python 3.10 or higher is already installed."
-    fi
-}
-
-# Writes a logfile with the current installed version number and installation type
-write_to_log() {
-    local installation_type=$1
-    echo "Writing to log file..."
-    echo "$VERSION" > "$LOGFILE"
-    echo "$installation_type" >> "$LOGFILE"
-}
-
-run_start_script(){
-    chmod +x start.sh
-    ./start.sh
-}
-
-
 # END message when the installation is completed
+END_MESSAGE="QCompanion successfully installed. Start with the start.sh script or by running streamlit serve Homepage.py in your terminal."
 
-END_MESSAGE="Companion successfully installed, you can launch next time with the start.sh script. Ollama-companion will autolaunch on port 8051 and defaults to making a public facing url for your companion. If you only want to run Ollama-companion locally: run the start.sh script with '-local' or '-lan' arguments."
-
-
-## Installation-types
-# There are 4 different types of installations
-# Use the arguments -minimal -min, -large -l, or use -interactive or -i to install the client interactively.
-# Otherwise the installation will do a standard installation without pytorch and ollama.
-# Minimal installation function
-install_minimal() {
-    echo "Starting minimal installation..."
-    install_packages "$OS"
-    check_python "$OS"
-    clone_ollama_companion
-    create_python_venv
-    activate_venv
-    pip_dependencies
-    write_to_log "minimal"
-    echo "$END_MESSAGE" 
-}
-
-# Medium installation function
-install_medium() {
-    echo "Starting Standard installation..."
-    install_packages "$OS"
-    check_python "$OS"
-    clone_ollama_companion
-    clone_and_make_llama_cpp
-    create_python_venv
-    activate_venv
-    pip_dependencies
-    write_to_log "standard"
-    echo "$END_MESSAGE" 
-}
-
-# Large installation function
-install_large() {
-    echo "Starting Complete installation..."
-    install_packages "$OS"
-    check_python "$OS"
-    clone_ollama_companion
-    clone_and_make_llama_cpp
-    create_python_venv
-    activate_venv
-    pip_dependencies
-    pip install torch 
-    install_ollama
-    write_to_log "large"
-    echo "$END_MESSAGE"
-}
-
-# Interactive installation function
-install_interactive() {
-    echo "Starting interactive installation..."
-    install_ollama
-    interactive_check_python
-    echo "Cloning Ollama-companion directory"
-    clone_ollama_companion
-    clean_build_llama_cpp
-    echo "Do you want to use the included virtual environment and install all Python dependencies ? (recommended) (yes/no)"
-    read use_venv_response
-    if [[ $use_venv_response == "yes" ]]; then
-        create_python_venv
-        activate_venv
-        pip_dependencies
-        pip install torch
-	write_to_log "interactive"
-        echo "Virtual environment set up and dependencies installed."
-    else
-        echo "Skipping virtual environment setup and Python dependency installation."
-	echo "Install the needed python dependencies from the requirements.txt with pip install -r requirements.txt"
-	echo "Recommended to install these python libraries in a virtual enviroment"
-    fi
-   
-    # Ask the user if they want to start Ollama Companion directly
-    read -p "Do you want to start Ollama Companion directly? (yes/no) " start_now_response
-    if [[ $start_now_response == "yes" ]]; then
-        run_start_script
-    else
-        echo "You can run start.sh from the ollama-companion directory to get started."
-    fi
-    echo "$END_MESSAGE"
-
-}
+# TODO MAKE SURE YOU INCLUDE ALLLLLL THE DEPENDENCIES IN THE REQUIREMENTS.TXT FILE
 
 main() {
     # Detect the OS
@@ -302,64 +96,15 @@ main() {
         . /etc/os-release
         OS=$NAME
     fi
-
-    local install_ollama_flag=0
-    local block_start_script_flag=0
-    local requested_installation="standard" # Set default installation to standard
-
-    # Parse all arguments
-    for arg in "$@"; do
-        case $arg in
-            -minimal|-min)
-                requested_installation="minimal"
-                ;;
-            -large|-l)
-                requested_installation="large"
-                ;;
-            -interactive|-i)
-                requested_installation="interactive"
-                ;;
-            -ollama)
-                install_ollama_flag=1
-                ;;
-            -b|-block)
-                block_start_script_flag=1
-                ;;
-        esac
-    done
-
-    # Check if an upgrade is needed and perform installation
-    if is_upgrade_needed $requested_installation; then
-        echo "Upgrade needed. Installing $requested_installation version."
-    else
-        echo "Proceeding with $requested_installation installation."
-    fi
-
-    case $requested_installation in
-        minimal)
-            install_minimal
-            ;;
-        standard)
-            install_medium
-            ;;
-        large)
-            install_large
-            ;;
-        interactive)
-            install_interactive
-            ;;
-    esac
-
-    # Install Ollama if the flag is set
-    if [[ $install_ollama_flag -eq 1 ]]; then
-        echo "Installing Ollama..."
-        install_ollama_headless
-    fi
-
-    # Run start script if the block flag is not set
-    if [[ $block_start_script_flag -eq 0 ]]; then
-        run_start_script
-    fi
+    echo "Starting Standard installation..."
+    install_packages "$OS"
+    check_python "$OS"
+    clone_and_make_llama_cpp
+    create_python_venv
+    activate_venv
+    pip_dependencies
+    write_to_log "standard"
+    echo "$END_MESSAGE" 
 }
 
 # Call the main function with all passed arguments

@@ -58,7 +58,15 @@ st.title("High Precision Quantization")
 model_folders = [f.name for f in models_dir().iterdir() if f.is_dir()] if models_dir().exists() else ["Directory not found"]
 
 model_folder = st.selectbox("Select a Model Folder", model_folders)
-options = {option: st.checkbox(label=option) for option in config['conversion_quants']}
+
+conversion_cols = st.columns(len(config['conversion_quants']))
+options = {}
+for i in range(0, len(config['conversion_quants'])):
+    with conversion_cols[i]:
+        option = config['conversion_quants'][i]
+        options.update({option: st.checkbox(label=option)})
+
+# options = {option: st.checkbox(label=option) for option in config['conversion_quants']}
 
 if st.button("Run Commands"):
     if not any(options.values()):

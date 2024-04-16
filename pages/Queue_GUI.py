@@ -22,6 +22,7 @@ st.write("The current state of the job scheduler is shown below.")
 update_active()
 st.write(st.session_state["active"])
 
+# haunted bug - you need to refresh via another button when you activate it but not when you deactivate it
 if st.button("Toggle Compute Job Scheduler", on_click=get_scheduler().toggle):
     # callback and update have to be in a very specific order for them to work
     update_active()
@@ -60,7 +61,7 @@ if st.button("Clear Job List", disabled=st.session_state["active"], on_click=get
     # callback and update have to be in a very specific order for them to work
     update_jobs()
 
-delete_idx = st.number_input("Delete Job at Index", min_value=0, max_value=(len(st.session_state["jobs"])-1), value=0)
+delete_idx = st.number_input("Delete Job at Index", disabled=st.session_state["active"], min_value=0, max_value=(0 if len(st.session_state["jobs"]) == 0 else len(st.session_state["jobs"])-1), value=0)
 if st.button("Delete Job", disabled=st.session_state["active"], on_click=lambda: get_scheduler().remove_job(delete_idx)):
     # callback and update have to be in a very specific order for them to work
     update_jobs()
