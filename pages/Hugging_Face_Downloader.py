@@ -1,6 +1,7 @@
 # FILESTATUS: completed, needs testing. Last updated v0.1.2-pre3
 # IMPORTS ---------------------------------------------------------------------------------
 import requests, streamlit as st
+st.set_page_config(layout="wide")
 from pathlib import Path
 from st_pages import add_indentation
 from util.scheduler import *
@@ -8,7 +9,7 @@ from util.paths import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 # TODO be able to change output directory
-# TODO test how fast this is because I don't think this is parallelized??? 
+# TODO write new scheduler and parallelize
 # TODO maybe you need to make another scheduler for just download jobs while the other is used for conversion/quantization/finetuning jobs
 
 # write the download task to the queue
@@ -19,7 +20,7 @@ def queue_command(file_url, download_path, filename):
         "-d", str(download_path), "-o", filename,
         "--continue=true"
     ]
-    get_scheduler.add_job(command)
+    get_scheduler().add_job(command)
 
 # queues a download task for each file in the file_links_dict
 def trigger_command(file_links_dict, model_name):

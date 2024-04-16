@@ -1,4 +1,4 @@
-# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality. Last updated v0.1.2-pre1
+# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality. Last updated v0.1.2-pre4
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 from datetime import datetime
@@ -31,8 +31,10 @@ class Scheduler:
         self.queuePath = os.path.join(thispath, "queue.txt")
         self.outPath = os.path.join(thispath, "completed.txt")
         self.active = False
+        st.session_state["active"] = self.active
         self.job = None
         self.command = ""
+        self.terminationSignal = False
         self.lastLog = ""
         # implementation of a way to delete partially downloaded files
         self.downloaded_files = []
@@ -79,22 +81,17 @@ class Scheduler:
         with open(self.outPath, "w") as f:
             f.write("")
 
-    # switch the jobs at index posiiton1 and position2
-    # this shouldn't actually be necessary with how we're going to run the reordering
-    def rearrange_jobs(self, position1, position2):
-        with open(self.queuePath, "r") as f:
-            lines = f.readlines()
-        lines[position1], lines[position2] = lines[position2], lines[position1]
+    # write the jobs back to the queue in the order given by the jobs list
+    def write_jobs(self, jobs):
+        jobs = [job + "\n" for job in jobs]
         with open(self.queuePath, "w") as f:
-            f.writelines(lines)
-
-    # this is the implementation we'll actually use
-    # write the jobs back to the queue in the order given by the positions dict
-    def rearrange_all_jobs(self, positions):
-        # TODO write because I don't know what the format returned by streamlit-sortables is
-        pass
+            f.writelines(jobs)
 
     # ACCESSORS ---------------------------------------------------------------------------
+            
+    # get active status
+    def is_active(self):
+        return self.active
 
     # return the queue as a list[str]
     def get_queue(self):
@@ -134,15 +131,24 @@ class Scheduler:
                 if self.command[0] == "aria2c":
                     download_path = self.command[-4]
                     filename = self.command[-2]
-                    file_path = download_path / filename
-                    self.downloaded_files.append(str(file_path))
+                    file_path = f"{download_path}/{filename}"
+                    self.downloaded_files.append(file_path)
 
-                self.job = subprocess.run(self.command, check=True)
+                self.job = subprocess.Popen(self.command, stdout=subprocess.PIPE)
 
-                # log the job as completed if it works
-                with open(self.outPath, "a") as f:
-                    self.log = f"Task executed successfully at {self.time()}: {self.command}\n"
-                    f.write(self.log)
+                # block while the job is running
+                # before you ask, no, you can't use subprocess.run() because that doesn't give a return value until the job is done
+                while self.job.poll() is None:
+                    if self.terminationSignal:
+                        self.terminate_job()
+                        self.terminationSignal = False
+                        break
+
+                if self.active:
+                    # log the job as completed if it works
+                    with open(self.outPath, "a") as f:
+                        self.log = f"Task executed successfully at {self.time()}: {self.command}\n"
+                        f.write(self.log)
 
             # log errors
             except subprocess.CalledProcessError as e:
@@ -153,7 +159,7 @@ class Scheduler:
 
                 # log the job as failed
                 with open(self.outPath, "a") as f:
-                    self.log = f"Error in task execution for task {self.command} at {self.time()}: {e}\n"
+                    self.log = f"Error in task execution at {self.time()} for task {self.command}: {e}\n"
                     f.write(self.log)
  
             # automatically loop through the jobs while active but only while there are jobs
@@ -161,28 +167,34 @@ class Scheduler:
             if self.active:
                 self.run_next_job()
         else:
-            self.active = False
+           self.active = False
+
+    # hopefully this works w.r.t. terminating the active job? it does!
+    def send_termination_signal(self):
+        self.terminationSignal = True
 
     # terminate the current job while it's running
     # optional argument to retain the job in the queue or to remove it and log it
-    def terminate(self, requeue=False):
+    def terminate_job(self):
+        self.active = False
         self.job.terminate()
         self.clear_downloaded_files()
         # log the job as terminated if not requeue
-        if not requeue:
-            with open(self.outPath, "a") as f:
-                self.log = f"Terminated task {self.command} at {self.time()}\n"
-                f.write(self.log)
+        # if not requeue:
+        with open(self.outPath, "a") as f:
+            self.log = f"Terminated task {self.command} at {self.time()}\n"
+            f.write(self.log)
         # if requeue, add the job back to the queue
-        else:
-            self.add_job(self.command, 0)
+        # else:
+        #     self.add_job(self.command, 0)
 
     # UTILS -------------------------------------------------------------------------------
 
     # return the current time for logging purposes
     def time(self):
-        return datetime.now().strftime("%Y-%m-$d %H:%M:%S")
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    # TODO REMOVE AND MOVE TO DOWNLOAD QUEUER
     # clear all partially downloaded files - only required for download tasks
     def clear_downloaded_files(self):
         for file_path in self.downloaded_files:

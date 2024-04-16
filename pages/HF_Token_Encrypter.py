@@ -1,6 +1,7 @@
 # FILESTATUS: unknown, needs testing. Last updated v0.1.0
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
+st.set_page_config(layout="wide")
 from st_pages import add_indentation
 from util.key import encrypt_token, generate_new_key
 

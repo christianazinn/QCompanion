@@ -1,6 +1,7 @@
 # FILESTATUS: pretty much done, needs testing. Last updated v0.1.2-pre3
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
+st.set_page_config(layout="wide")
 from st_pages import add_indentation
 from util.constants import config
 from util.scheduler import *

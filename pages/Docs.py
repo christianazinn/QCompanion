@@ -1,6 +1,7 @@
 # FILESTATUS: pretty much done but needs to have docs written in util.docs_inline. Last updated v0.1.0
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
+st.set_page_config(layout="wide")
 from util.docs_inline import docs
 from st_pages import add_indentation
 

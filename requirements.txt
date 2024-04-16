@@ -14,3 +14,4 @@ sentencepiece
 transformers
 litellm[proxy]
 st-pages
+streamlit-sortables

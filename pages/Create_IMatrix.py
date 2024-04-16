@@ -1,6 +1,7 @@
 # FILESTATUS: the entire thing still needs to be written + implemented. Last updated v0.1.1
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
+st.set_page_config(layout="wide")
 from st_pages import add_indentation
 
 # FUNCTIONS ---------------------------------------------------------------------------------

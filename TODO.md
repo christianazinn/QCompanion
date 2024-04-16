@@ -21,12 +21,10 @@ TODO thread safety? threading.Thread(target=process_queue, daemon=True).start()
 
 TODO follow page FILESTATUSes and also rework the scripts in the main directory
 TODO TEST TEST TEST!!!
-
+TODO add a page that allows you to make one great big queued op for download/convert/quantize/(imatrix)/upload/etc
+TODO keep an eye on streamlit-process-manager
 
 # TODO NEXT TESTS
-test Hugging_Face_Downloader.py
-test queueing downloaded files
-test the actual file downloads
 test whether it works fine mixing conversion and download jobs
 test cancelling file downloads midway
 test whether it's actually parallelized???

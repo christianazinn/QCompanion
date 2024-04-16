@@ -1,6 +1,7 @@
 # FILESTATUS: needs to be migrated to the New Way of Doing Things. Last updated v0.1.2-pre3
 # IMPORTS ---------------------------------------------------------------------------------
 import os, streamlit as st
+st.set_page_config(layout="wide")
 from st_pages import add_indentation
 from huggingface_hub import HfApi
 from requests.exceptions import HTTPError
@@ -63,7 +64,7 @@ def upload_files_to_repo(token, repo_name, files_to_upload, readme_content, high
 
 # Cache the function to improve performance
 @st.cache_data
-def list_model_files(models_dir, subfolder):
+def list_model_files(subfolder):
     model_files = {}
     models_dir_path = models_dir()
     if models_dir_path.exists() and models_dir_path.is_dir():
@@ -74,8 +75,8 @@ def list_model_files(models_dir, subfolder):
     return model_files
 
 # List files in High-Precision and Medium-Precision folders
-high_precision_files = list_model_files(models_dir(), "High-Precision-Quantization")
-medium_precision_files = list_model_files(models_dir(), "Medium-Precision-Quantization")
+high_precision_files = list_model_files("High-Precision-Quantization")
+medium_precision_files = list_model_files("Medium-Precision-Quantization")
 
 # After calling list_model_files, check the contents
 # print("High Precision Files:", high_precision_files)
