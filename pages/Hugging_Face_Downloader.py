@@ -1,4 +1,4 @@
-# FILESTATUS: completed, needs testing. Last updated v0.1.2-pre3
+# FILESTATUS: completed, needs testing. Last updated v0.1.2-pre5
 # IMPORTS ---------------------------------------------------------------------------------
 import requests, streamlit as st
 st.set_page_config(layout="wide")
@@ -8,29 +8,10 @@ from util.scheduler import *
 from util.paths import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
-# TODO be able to change output directory
-# TODO write new scheduler and parallelize
-# TODO maybe you need to make another scheduler for just download jobs while the other is used for conversion/quantization/finetuning jobs
-
-# write the download task to the queue
-def queue_command(file_url, download_path, filename):
-    command = [
-        "aria2c", file_url,
-        "--max-connection-per-server=16", "--split=8", "--min-split-size=25M", "--allow-overwrite=true",
-        "-d", str(download_path), "-o", filename,
-        "--continue=true"
-    ]
-    get_scheduler().add_job(command)
 
 # queues a download task for each file in the file_links_dict
-def trigger_command(file_links_dict, model_name):
-    folder_name = model_name.split("/")[-1]
-    download_path = models_dir() / folder_name
-    download_path.mkdir(parents=True, exist_ok=True)
-
-    for file_name, file_url in file_links_dict.items():
-        filename = Path(file_name).name
-        queue_command(file_url, download_path, filename)
+def trigger_command(model_name):
+    get_scheduler().add_job(["python3", "util/download.py", model_name])
 
     return "Download tasks have been queued."
 
@@ -77,7 +58,7 @@ if st.button("Get File List"):
 
 if st.button("Download Files"):
     if 'file_links_dict' in st.session_state and st.session_state['file_links_dict']:
-        queue_message = trigger_command(st.session_state['file_links_dict'], model_name)
+        queue_message = trigger_command(model_name)
         st.text(queue_message)
     else:
         st.error("No files to download. Please get the file list first.")

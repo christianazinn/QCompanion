@@ -1,12 +1,10 @@
 TODO allow gpu offload for certain tasks
-TODO be able to queue later jobs for files that don't yet exist (i.e. convert then quantize) and handle errors in ordering
-TODO add a page that allows you to make one great big queued op for download/convert/quantize/(imatrix)/upload/etc
+TODO be able to queue later jobs for files that don't yet exist (i.e. convert then quantize) and handle errors in ordering/make a page for it
 TODO LLaMA-Factory integration
 TODO Lilac integration?
 TODO support further cli options for relevant commands/pages
 
 # ON DECK
-TODO create scripts for download/upload and use those as commands for download/upload (shocker)
 TODO imatrix creation
 TODO imatrix quantization support
 TODO readme creation from template!

@@ -1,5 +1,5 @@
 # main.py
-# Version 0.1.2-pre5: Aesthetics and minor fixes
+# Version 0.1.2-pre5: Bugfixes, better quantization and conversion handling, and queued up/downloads.
 import streamlit as st
 st.set_page_config(layout="wide")
 from st_pages import Page, Section, show_pages, add_indentation

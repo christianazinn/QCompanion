@@ -1,4 +1,4 @@
-# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality. Last updated v0.1.2-pre4
+# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality. Last updated v0.1.2-pre5
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 from datetime import datetime
@@ -7,7 +7,6 @@ from util.paths import llama_cpp_dir
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
-# TODO perhaps make download tasks independent of other tasks? but then you run into thread safety issues I think
 # the scheduler singleton class (do i need st.cache_resource here?)
 @st.cache_resource
 class Scheduler:

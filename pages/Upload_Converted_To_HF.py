@@ -1,4 +1,4 @@
-# FILESTATUS: needs to be migrated to the New Way of Doing Things. Last updated v0.1.2-pre3
+# FILESTATUS: needs potentially expanded functionality. Last updated v0.1.2-pre5
 # IMPORTS ---------------------------------------------------------------------------------
 import os, streamlit as st
 st.set_page_config(layout="wide")
@@ -6,61 +6,30 @@ from st_pages import add_indentation
 from huggingface_hub import HfApi
 from requests.exceptions import HTTPError
 from util.paths import *
+from util.scheduler import *
 from util.key import decrypt_token
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
-# Search for the llama.cpp directory
-if not llama_cpp_dir():
-    st.error("llama.cpp directory not found. Please check the file structure.")
-
-## Uses username from HF Token
-def get_username_from_token(token):
-    api = HfApi()
-    user_info = api.whoami(token=token)
-    return user_info['name']
-
-
 # Gathers files and uploads to HuggingFace
-def upload_files_to_repo(token, repo_name, files_to_upload, readme_content, high_precision_files, medium_precision_files, selected_model):
-    try:
-        api = HfApi()
-        username = get_username_from_token(token)
-        repo_id = f"{username}/{repo_name}"
+def trigger_command(token, repo_name, files_to_upload, high_precision_files, medium_precision_files, selected_model):
+    final_upload = []
 
-        # Check if the repository exists, if not create it
-        try:
-            api.repo_info(repo_id=repo_id, token=token)
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                api.create_repo(repo_id=repo_id, token=token, repo_type="model")
-            else:
-                raise
+    # Rename particular filepaths
+    for file_name in files_to_upload:
+        if file_name in high_precision_files.get(selected_model, []):
+            folder_path = models_dir() / selected_model / "High-Precision-Quantization"
+        elif file_name in medium_precision_files.get(selected_model, []):
+            folder_path = models_dir() / selected_model / "Medium-Precision-Quantization"
+        else:
+            continue
 
-        # Upload README.md if content is provided
-        if readme_content:
-            readme_path = models_dir() / 'README.md'
-            with open(str(readme_path), 'w') as readme_file:
-                readme_file.write(readme_content)
-            api.upload_file(path_or_fileobj=str(readme_path), path_in_repo='README.md', repo_id=repo_id, token=token)
-            os.remove(str(readme_path))
+        file_path = folder_path / file_name
+        final_upload.append(str(file_path))
 
-        # Upload selected files
-        for file_name in files_to_upload:
-            if file_name in high_precision_files.get(selected_model, []):
-                folder_path = models_dir() / selected_model / "High-Precision-Quantization"
-            elif file_name in medium_precision_files.get(selected_model, []):
-                folder_path = models_dir() / selected_model / "Medium-Precision-Quantization"
-            else:
-                continue
-
-            file_path = folder_path / file_name
-            if file_path.is_file():
-                api.upload_file(path_or_fileobj=str(file_path), path_in_repo=file_name, repo_id=repo_id, token=token)
-
-        return f"Files uploaded successfully. View at: https://huggingface.co/{repo_id}"
-    except Exception as e:
-        return f"An error occurred: {str(e)}"
+    command = ["python3", "util/upload.py", token, repo_name, *final_upload]
+    get_scheduler().add_job(command)
+    return "Upload tasks have been queued."
 
 # Cache the function to improve performance
 @st.cache_data
@@ -103,8 +72,7 @@ selected_files = st.multiselect("Select Files to Upload", combined_files, key="f
 
 
 # Repository details and README content
-repo_name = st.text_input("Repository Name", value=f"{selected_model}-GGUF")
-readme_content = st.text_area("README.md Content", "Enter content for README.md")
+repo_name = st.text_input("Repository Name", value=f"{selected_model}-gguf")
 
 # Token input
 use_unencrypted_token = st.checkbox("Unencrypted Token")
@@ -117,15 +85,7 @@ else:
 
 # Upload button
 if st.button("Upload Selected Files") and hf_token:
-    upload_message = upload_files_to_repo(
-        token=hf_token, 
-        repo_name=repo_name, 
-        files_to_upload=selected_files, 
-        readme_content=readme_content,
-        high_precision_files=high_precision_files,
-        medium_precision_files=medium_precision_files,
-        selected_model=selected_model
-    )
+    upload_message = trigger_command(hf_token, repo_name, selected_files, high_precision_files, medium_precision_files, selected_model)
     st.info(upload_message)
 
 if 'HUGGINGFACE_TOKEN' in os.environ:
