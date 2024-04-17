@@ -56,7 +56,7 @@ if st.button("Get File List"):
         if 'file_links_dict' in st.session_state:
             del st.session_state['file_links_dict']
 
-if st.button("Download Files"):
+if st.button("Queue File Downloads"):
     if 'file_links_dict' in st.session_state and st.session_state['file_links_dict']:
         queue_message = trigger_command(model_name)
         st.text(queue_message)

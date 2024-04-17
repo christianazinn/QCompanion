@@ -84,7 +84,7 @@ else:
         hf_token = decrypt_token(encrypted_token)
 
 # Upload button
-if st.button("Upload Selected Files") and hf_token:
+if st.button("Queue File Uploads") and hf_token:
     upload_message = trigger_command(hf_token, repo_name, selected_files, high_precision_files, medium_precision_files, selected_model)
     st.info(upload_message)
 

@@ -8,10 +8,9 @@ from util.scheduler import *
 from util.paths import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
-# TODO implement gpu offload at some point and be able to change output directory
 
 # Trigger the conversion commands
-def trigger_command(model_folder, options):
+def trigger_command(model_folder, options, vocab, ctx, pad, skip):
 
     # Check if any quantization type is selected
     if not any(options.values()):
@@ -26,13 +25,13 @@ def trigger_command(model_folder, options):
     # Queue the commands
     for option, selected in options.items():
         if selected:
-            queue_command(model_folder, option.lower(), input_dir, target_dir)
+            queue_command(model_folder, option.lower(), input_dir, target_dir, vocab, ctx, pad, skip)
 
     return "Commands queued. They will run sequentially."
 
 
 # Schedule the conversion command
-def queue_command(model_folder, out_type, input_dir, target_dir):
+def queue_command(model_folder, out_type, input_dir, target_dir, vocab, ctx, pad, skip):
     output_file = f"{model_folder}-{out_type}.GGUF"
     
     # Correct path for convert.py
@@ -45,11 +44,24 @@ def queue_command(model_folder, out_type, input_dir, target_dir):
         "--outtype", out_type
     ]
 
+    if vocab:
+        command.extend(["--vocabtype", vocab])
+
+    if ctx:
+        command.extend(["--ctx", str(ctx)])
+
+    if pad:
+        command.append("--pad-vocab")
+
+    if skip:
+        command.append("--skip-unknown")
+
     # add to scheduler
     get_scheduler().add_job(command)
 
 
 # UI CODE ---------------------------------------------------------------------------------
+# TODO can you do gpu offloading?
 
 add_indentation()
 
@@ -66,13 +78,28 @@ for i in range(0, len(config['conversion_quants'])):
         option = config['conversion_quants'][i]
         options.update({option: st.checkbox(label=option)})
 
-# options = {option: st.checkbox(label=option) for option in config['conversion_quants']}
+with st.expander("Conversion Options"):
+    optcols = st.columns(4)
+    
+    with optcols[0]:
+        use_vocab = st.checkbox("Change vocab type, --vocabtype")
+        vocab = st.selectbox("Vocab type", ["spm", "bpe", "hfft"], index=0, disabled=not use_vocab)
 
-if st.button("Run Commands"):
+    with optcols[1]:
+        use_c = st.checkbox("Change context length, --ctx")
+        c = st.number_input("Size of the prompt context, -c", value=2048, disabled=not use_c)
+
+    with optcols[2]:
+        use_pad = st.checkbox("Pad vocab, --pad-vocab")
+
+    with optcols[3]:
+        use_skip = st.checkbox("Skip unknown, --skip-unknown")
+
+if st.button("Queue Commands"):
     if not any(options.values()):
         st.error("Please select at least one quantization type before running commands.")
     else:
-        status = trigger_command(model_folder, options)
+        status = trigger_command(model_folder, options, vocab if use_vocab else None, c if use_c else None, use_pad, use_skip)
         st.text(status)
 
 

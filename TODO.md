@@ -2,15 +2,13 @@ TODO allow gpu offload for certain tasks
 TODO be able to queue later jobs for files that don't yet exist (i.e. convert then quantize) and handle errors in ordering/make a page for it
 TODO LLaMA-Factory integration
 TODO Lilac integration?
-TODO support further cli options for relevant commands/pages
 
 # ON DECK
-TODO imatrix creation
-TODO imatrix quantization support
+TODO custom commands in quantize, convert pages
 TODO readme creation from template!
 
 # NEXT TESTS
-done for now
+TODO fix the weird bug where you have to refresh the page on toggling on the job scheduler
 
 # CONTINUALLY
 TODO keep install scripts and requirements.txt as up to date as you physically can

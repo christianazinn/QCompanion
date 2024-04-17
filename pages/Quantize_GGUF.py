@@ -1,4 +1,4 @@
-# FILESTATUS: needs expanded functionality. Last updated v0.1.2-pre5
+# FILESTATUS: needs expanded functionality. Last updated v0.1.2-pre6
 # IMPORTS ---------------------------------------------------------------------------------
 import os, streamlit as st
 st.set_page_config(layout="wide")
@@ -9,22 +9,8 @@ from util.scheduler import *
 from util.paths import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
-# TODO dont forget to implement imatrices somehow + gpu offloading
-# TODO be able to change output directory + add support for other options like -c
 
-# List valid, selectable GGUF files in the models directory
-def list_gguf_files():
-    gguf_files = []
-    if os.path.exists(models_dir()):
-        for model_folder in os.listdir(models_dir()):
-            hpq_folder = os.path.join(models_dir(), model_folder, 'High-Precision-Quantization')
-            if os.path.exists(hpq_folder) and os.path.isdir(hpq_folder):
-                for file in os.listdir(hpq_folder):
-                    if file.lower().endswith('.gguf'):
-                        gguf_files.append(os.path.join(model_folder, 'High-Precision-Quantization', file))
-    return gguf_files
-
-def trigger_command(modelpath, options):
+def trigger_command(modelpath, options, imatrix, nthreads):
 
     if not any(options.values()):
         return "Error: Please select at least one quantization option."
@@ -35,26 +21,37 @@ def trigger_command(modelpath, options):
     debug_output = ""
     modelpath_path = Path(modelpath)
     model_name_only, model_file = modelpath_path.parts[-3], modelpath_path.name
-    medium_precision_dir = models_dir() / model_name_only / 'Medium-Precision-Quantization'
+    base_dir = models_dir() / model_name_only
+    imatrix_dir = base_dir / 'imatrix'
+    medium_precision_dir = base_dir / 'Medium-Precision-Quantization'
     medium_precision_dir.mkdir(parents=True, exist_ok=True)
                
     for option, selected in options.items():
         if selected:
-            source_path = models_dir() / model_name_only / 'High-Precision-Quantization' / model_file
+            source_path = base_dir / 'High-Precision-Quantization' / model_file
             modified_model_file = model_file.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')
             output_path = medium_precision_dir / f"{modified_model_file}{option.upper()}.GGUF"
 
-            debug_command_str = queue_command(source_path, output_path, option)
+            debug_command_str = queue_command(source_path, output_path, option, imatrix_dir / imatrix, nthreads)
             debug_output += f"Scheduled: {debug_command_str}\n"
 
     return debug_output if debug_output else "No options selected."
 
-def queue_command(source_path, output_path, option):
+def queue_command(source_path, output_path, option, imatrix, nthreads):
     command = [str(llama_cpp_dir() / 'quantize'), "--allow-requantize", str(source_path), str(output_path), option]
+
+    if imatrix:
+        command.insert("--imatrix", 1)
+        command.insert(str(imatrix), 2)
+
+    if nthreads:
+        command.extend([str(nthreads)])
+
     get_scheduler().add_job(command)
     return " ".join(command)
 
 # UI CODE ---------------------------------------------------------------------------------
+# TODO can you do gpu offloading?
     
 add_indentation()
 
@@ -76,7 +73,19 @@ with lcol:
     st.markdown("### Legacy Quants")
     legacy_options = {option: st.checkbox(label=option) for option in config['quantization_legacy']}
 
-run_commands = st.button("Run Selected Commands")
+with st.expander("Optional parameters"):
+    optcols = st.columns(2)
+
+    with optcols[0]:
+        use_imatrix = st.checkbox("Use importance matrix, --imatrix")
+        data_files = list_imatrix_files()
+        selected_training_data = st.selectbox("Select training data", data_files, disabled=not use_imatrix)
+
+    with optcols[1]:
+        use_nthreads = st.checkbox("Change thread count")
+        t = st.number_input("Number of threads to use, -nthreads", value=4, disabled=not use_nthreads)
+
+run_commands = st.button("Queue Commands")
 
 if run_commands:
     # Check if no quantization type options are selected
@@ -84,7 +93,7 @@ if run_commands:
         st.error("Please select at least one quantization type before running commands.")
     # Proceed only if at least one quantization type is selected or if Docker is selected with a type
     elif any(ioptions.values()) or any(koptions.values()) or any(legacy_options.values()):
-        status = trigger_command(selected_gguf_file, ioptions | koptions | legacy_options)
+        status = trigger_command(selected_gguf_file, ioptions | koptions | legacy_options, selected_training_data if use_imatrix else None, t if use_nthreads else None)
         st.text_area("Debug Output", status, height=300)
     else:
         # This should not happen, but we include it for robustness

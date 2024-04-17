@@ -1,4 +1,4 @@
-# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality. Last updated v0.1.2-pre5
+# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality. Last updated v0.1.2-pre6
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 from datetime import datetime
@@ -35,6 +35,7 @@ class Scheduler:
         self.job = None
         self.command = ""
         self.terminationSignal = False
+        self.requeue = True
         self.lastLog = ""
 
     # MANIPULATORS ------------------------------------------------------------------------
@@ -168,20 +169,24 @@ class Scheduler:
     # hopefully this works w.r.t. terminating the active job? it does!
     def send_termination_signal(self):
         self.terminationSignal = True
+        self.requeue = False
+
+    # terminate the active job and requeue
+    def send_termination_signal_requeue(self):
+        self.terminationSignal = True
+        self.requeue = True
 
     # terminate the current job while it's running
-    # optional argument to retain the job in the queue or to remove it and log it
     def terminate_job(self):
         self.active = False
         self.job.terminate()
-        # log the job as terminated if not requeue
-        # if not requeue:
-        with open(self.outPath, "a") as f:
-            self.log = f"Terminated task {self.command} at {self.time()}\n"
-            f.write(self.log)
-        # if requeue, add the job back to the queue
-        # else:
-        #     self.add_job(self.command, 0)
+        # log the job as terminated if not requeue or add back to queue if true
+        if self.requeue:
+            self.add_job(self.command, 0)
+        else:
+            with open(self.outPath, "a") as f:
+                self.log = f"Terminated task {self.command} at {self.time()}\n"
+                f.write(self.log)
 
     # UTILS -------------------------------------------------------------------------------
 
