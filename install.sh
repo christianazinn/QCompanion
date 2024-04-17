@@ -4,7 +4,7 @@
 # If you need to update, please reclone the repo and run the installer again and move your llama.cpp/models folder.
 
 # These packages are needed to install or use ollama/companion.
-COMMON_PACKAGES="aria2 make gcc git pciutils curl" 
+COMMON_PACKAGES="make gcc git" 
 VERSION="4"
 
 # Function to install packages per distribution type.

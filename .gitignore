@@ -3,3 +3,5 @@ logs/*
 .vscode/*
 testing/*
 util/*.txt
+util/__pycache__/*
+pages/__pycache__/*

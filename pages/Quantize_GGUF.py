@@ -42,7 +42,7 @@ def trigger_command(modelpath, options):
         if selected:
             source_path = models_dir() / model_name_only / 'High-Precision-Quantization' / model_file
             modified_model_file = model_file.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')
-            output_path = medium_precision_dir / f"{modified_model_file}-{option.upper()}.GGUF"
+            output_path = medium_precision_dir / f"{modified_model_file}{option.upper()}.GGUF"
 
             debug_command_str = queue_command(source_path, output_path, option)
             debug_output += f"Scheduled: {debug_command_str}\n"
@@ -63,7 +63,7 @@ st.title("Medium Precision Quantization")
 gguf_files = list_gguf_files()
 
 selected_gguf_file = st.selectbox("Select a GGUF File", gguf_files)
-icol, kcol = st.columns(2)
+icol, kcol, lcol = st.columns(3)
 with icol:
     st.markdown("### I-Quants")
     ioptions = {option: st.checkbox(label=option) for option in config['quantization_I']}
@@ -71,16 +71,20 @@ with icol:
 with kcol:
     st.markdown("### K-Quants")
     koptions = {option: st.checkbox(label=option) for option in config['quantization_K']}
+    
+with lcol:
+    st.markdown("### Legacy Quants")
+    legacy_options = {option: st.checkbox(label=option) for option in config['quantization_legacy']}
 
 run_commands = st.button("Run Selected Commands")
 
 if run_commands:
     # Check if no quantization type options are selected
-    if not any(ioptions.values()) or not any(koptions.values()):
+    if not (any(ioptions.values()) or any(koptions.values()) or any(legacy_options.values())):
         st.error("Please select at least one quantization type before running commands.")
     # Proceed only if at least one quantization type is selected or if Docker is selected with a type
-    elif any(ioptions.values()) or any(koptions.values()):
-        status = trigger_command(selected_gguf_file, ioptions | koptions)
+    elif any(ioptions.values()) or any(koptions.values()) or any(legacy_options.values()):
+        status = trigger_command(selected_gguf_file, ioptions | koptions | legacy_options)
         st.text_area("Debug Output", status, height=300)
     else:
         # This should not happen, but we include it for robustness

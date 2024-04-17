@@ -26,17 +26,17 @@ def trigger_command(model_folder, options):
     # Queue the commands
     for option, selected in options.items():
         if selected:
-            queue_command(model_folder, option.lower(), base_dir, input_dir, target_dir)
+            queue_command(model_folder, option.lower(), input_dir, target_dir)
 
     return "Commands queued. They will run sequentially."
 
 
 # Schedule the conversion command
-def queue_command(model_folder, out_type, base_dir, input_dir, target_dir):
+def queue_command(model_folder, out_type, input_dir, target_dir):
     output_file = f"{model_folder}-{out_type}.GGUF"
     
     # Correct path for convert.py
-    convert_script_path = base_dir.parent / "convert.py" # Assuming convert.py is in llama.cpp
+    convert_script_path = llama_cpp_dir() / "convert.py" # Assuming convert.py is in llama.cpp
     
     command = [
         "python3", str(convert_script_path),

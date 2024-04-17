@@ -3,6 +3,7 @@
 from pathlib import Path
 from datetime import datetime
 import subprocess, streamlit as st, os, threading
+from util.paths import llama_cpp_dir
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
@@ -36,8 +37,6 @@ class Scheduler:
         self.command = ""
         self.terminationSignal = False
         self.lastLog = ""
-        # implementation of a way to delete partially downloaded files
-        self.downloaded_files = []
 
     # MANIPULATORS ------------------------------------------------------------------------
 
@@ -59,7 +58,7 @@ class Scheduler:
         else:
             with open(self.queuePath, "r") as f:
                 lines = f.readlines()
-            lines.insert(position, job)
+            lines.insert(position, ' '.join(job + ["\n"]))
             with open(self.queuePath, "w") as f:
                 f.writelines(lines)
 
@@ -127,13 +126,6 @@ class Scheduler:
         if self.command:
             try:
 
-                # if the job is a download task, add the file to the list of partially downloaded files
-                if self.command[0] == "aria2c":
-                    download_path = self.command[-4]
-                    filename = self.command[-2]
-                    file_path = f"{download_path}/{filename}"
-                    self.downloaded_files.append(file_path)
-
                 self.job = subprocess.Popen(self.command, stdout=subprocess.PIPE)
 
                 # block while the job is running
@@ -143,6 +135,13 @@ class Scheduler:
                         self.terminate_job()
                         self.terminationSignal = False
                         break
+
+                if self.job.poll() == 1 and "convert" in self.command[1]:
+                    # embedding error! (presumably)
+                    self.command[1] = f"{str(llama_cpp_dir())}/convert-hf-to-gguf.py"
+                    self.add_job(self.command, 0)
+                    self.job.terminate()
+                    self.run_next_job()
 
                 if self.active:
                     # log the job as completed if it works
@@ -154,8 +153,6 @@ class Scheduler:
             except subprocess.CalledProcessError as e:
                 self.mostRecentError = f"Error in task execution: {e}"
                 self.active = False
-
-                self.clear_downloaded_files()
 
                 # log the job as failed
                 with open(self.outPath, "a") as f:
@@ -178,7 +175,6 @@ class Scheduler:
     def terminate_job(self):
         self.active = False
         self.job.terminate()
-        self.clear_downloaded_files()
         # log the job as terminated if not requeue
         # if not requeue:
         with open(self.outPath, "a") as f:
@@ -193,14 +189,6 @@ class Scheduler:
     # return the current time for logging purposes
     def time(self):
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # TODO REMOVE AND MOVE TO DOWNLOAD QUEUER
-    # clear all partially downloaded files - only required for download tasks
-    def clear_downloaded_files(self):
-        for file_path in self.downloaded_files:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        self.downloaded_files.clear()
 
 # accessor for the scheduler singleton
 @st.cache_resource
