@@ -1,4 +1,4 @@
-# FILESTATUS: needs potentially expanded functionality. Last updated v0.1.2-pre5
+# Last updated v0.1.2
 # IMPORTS ---------------------------------------------------------------------------------
 import os, streamlit as st
 st.set_page_config(layout="wide")

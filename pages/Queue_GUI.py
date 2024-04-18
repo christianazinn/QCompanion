@@ -1,12 +1,10 @@
-# FILESTATUS: mostly done, but still needs testing and feature implementations. Last updated v0.1.2-pre6
+# Last updated v0.1.2
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 st.set_page_config(layout="wide")
 from st_pages import add_indentation
 from util.scheduler import *
 from streamlit_sortables import sort_items
-
-# FUNCTIONS ---------------------------------------------------------------------------------
 
 # UI CODE ---------------------------------------------------------------------------------
 
@@ -26,8 +24,8 @@ with schcols[0]:
     st.write(st.session_state["active"])
 
 # TODO ensure requeue works AND the scheduler doesn't stop the current job when you toggle it off
-# TODO reformat since the way the buttons are spaced is kinda ugly rn (consider columnizing differently and passing in a [ints] for rel width)
-# haunted bug - you need to refresh via another button when you activate it but not when you deactivate it
+# TODO test aesthetics of new layout
+# TODO haunted bug - you need to refresh via another button when you activate it but not when you deactivate it
 with schcols[1]:
     if st.button("Toggle Scheduler", on_click=get_scheduler().toggle):
         # callback and update have to be in a very specific order for them to work

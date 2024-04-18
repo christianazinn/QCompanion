@@ -1,4 +1,4 @@
-# FILESTATUS: fully implemented but needs significant testing for efficiency, thread safety, bugfixing, overall functionality. Last updated v0.1.2-pre6
+# Last updated v0.1.2
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 from datetime import datetime

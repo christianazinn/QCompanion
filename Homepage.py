@@ -1,5 +1,5 @@
 # main.py
-# Version 0.1.2-pre6: imatrices, custom commands
+# Version 0.1.2: Queue fully implemented, primary pipeline is functional
 import streamlit as st
 st.set_page_config(layout="wide")
 from st_pages import Page, Section, show_pages, add_indentation
@@ -17,7 +17,6 @@ show_pages(
     Page("pages/Create_IMatrix.py", "Create Importance Matrix", ":chart_with_upwards_trend:"),
     Page("pages/Quantize_GGUF.py", "Quantize GGUF", ":heavy_plus_sign:" ),
     Page("pages/Upload_Converted_To_HF.py", "Upload model to HuggingFace", ":outbox_tray:"),
-    Page("pages/Queue_GUI.py", "Queue GUI", ":arrows_counterclockwise:"),
     Section("Extra Tools", icon=":toolbox:"),
     Page("pages/HF_Token_Encrypter.py", "Security", ":lock:"),
     ]    

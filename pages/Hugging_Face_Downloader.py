@@ -1,4 +1,4 @@
-# FILESTATUS: completed, needs testing. Last updated v0.1.2-pre5
+# Last updated v0.1.2
 # IMPORTS ---------------------------------------------------------------------------------
 import requests, streamlit as st
 st.set_page_config(layout="wide")
@@ -14,29 +14,6 @@ def trigger_command(model_name):
     get_scheduler().add_job(["python3", "util/download.py", model_name])
 
     return "Download tasks have been queued."
-
-# get the files from the Hugging Face repo - kept basically the same implementation as in the original
-def get_files_from_repo(url, repo_name):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            files_info = response.json()
-            file_info_dict = {}
-            file_links_dict = {}
-
-            base_url = f"https://huggingface.co/{repo_name}/resolve/main/"
-            for file in files_info:
-                name = file.get('path', 'Unknown')
-                size = file.get('size', 0)
-                human_readable_size = f"{size / 1024 / 1024:.2f} MB"
-                file_info_dict[name] = human_readable_size
-                file_links_dict[name] = base_url + name
-
-            return file_info_dict, file_links_dict
-        else:
-            return {}, {}
-    except Exception as e:
-        return {}, {}
 
 # UI CODE ---------------------------------------------------------------------------------
 

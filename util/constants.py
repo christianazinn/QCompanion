@@ -1,4 +1,4 @@
-# FILESTATUS: I'm not sure what you want out of this file. Last updated v0.1.2-pre4
+# Last updated v0.1.2
 
 # Shared configuration data
 config = {

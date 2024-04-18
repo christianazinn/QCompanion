@@ -1,4 +1,4 @@
-# FILESTATUS: the entire thing still needs to be written + implemented. Last updated v0.1.2-pre6
+# Last updated v0.1.2
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st, re
 st.set_page_config(layout="wide")
@@ -7,12 +7,6 @@ from util.paths import *
 from util.scheduler import *
 
 # FUNCTIONS ---------------------------------------------------------------------------------
-
-# functionality you need:
-# TODO default or changeable training parameters, incl. -c 512 -b 1024 etc
-
-# ./llama.cpp/imatrix -m {fp16} -f {IMATRIX} -o {imat_dat} --verbosity 2 -ngl {ngl} -c {c} -b {b} -t {t} 
-# custom parameters we want: -c -b -ngl -t defaults 512 1024 NONE NONE
 
 def trigger_command(selected_gguf_file, selected_training_data, c, b, ngl, t):
     gguf_path = Path(selected_gguf_file)
@@ -82,7 +76,6 @@ if st.button("Queue Importance Matrix Creation"):
         status = trigger_command(selected_gguf_file, selected_training_data, c, b, ngl if use_ngl else None, t if use_t else None)
         st.text(status)
 
-# TODO make the entire damn page lmao
 with st.expander("What is an Importance Matrix?"):
     st.markdown("""
     An Importance Matrix is a tool used to determine the importance of each feature in a dataset. 

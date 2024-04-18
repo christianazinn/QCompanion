@@ -1,4 +1,4 @@
-# FILESTATUS Complete and tested. Last updated 0.1.2-pre5
+# Last updated 0.1.2
 import sys
 from huggingface_hub import snapshot_download
 from pathlib import Path

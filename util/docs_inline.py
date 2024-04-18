@@ -1,4 +1,4 @@
-# FILESTATUS: needs to be entirely rewritten for QCompanion. Last updated v0.1.2-pre2
+# Last updated v0.1.2
 # TODO REWRITE
 docs = {
     "General information": {
