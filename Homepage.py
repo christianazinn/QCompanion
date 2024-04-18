@@ -1,5 +1,5 @@
 # main.py
-# Version 0.1.2: Queue fully implemented, primary pipeline is functional
+# Version 0.1.3-pre1: First bits of full pipeline UI code
 import streamlit as st
 st.set_page_config(layout="wide")
 from st_pages import Page, Section, show_pages, add_indentation
@@ -11,7 +11,10 @@ show_pages(
     [
     Page("Homepage.py", "Home", ":house:"),
     Page("pages/Docs.py", "Docs", ":books:"),
-    Section("Manually convert models", icon=":arrows_counterclockwise:"),
+    Section("Manually convert models", icon=":open_hands:"),
+    Page("pages/Full_Pipeline.py", "Full Pipeline Queue", ":arrows_clockwise:"),
+    Page("pages/Queue_GUI.py", "Queue GUI", ":arrows_counterclockwise:"),
+    Section("Manually convert models - Legacy", icon=":cd:"),
     Page("pages/Hugging_Face_Downloader.py", "Download model", ":inbox_tray:"),
     Page("pages/Convert_Safetensors.py", "Safetensors to GGUF", ":gem:"),
     Page("pages/Create_IMatrix.py", "Create Importance Matrix", ":chart_with_upwards_trend:"),
@@ -19,7 +22,7 @@ show_pages(
     Page("pages/Upload_Converted_To_HF.py", "Upload model to HuggingFace", ":outbox_tray:"),
     Section("Extra Tools", icon=":toolbox:"),
     Page("pages/HF_Token_Encrypter.py", "Security", ":lock:"),
-    ]    
+    ]
 )
 
 add_indentation()

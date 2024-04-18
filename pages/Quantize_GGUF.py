@@ -1,4 +1,4 @@
-# Last updated v0.1.2
+# Last updated v0.1.3-pre1
 # IMPORTS ---------------------------------------------------------------------------------
 import os, streamlit as st
 st.set_page_config(layout="wide")
@@ -51,7 +51,6 @@ def queue_command(source_path, output_path, option, imatrix, nthreads):
     return " ".join(command)
 
 # UI CODE ---------------------------------------------------------------------------------
-# TODO can you do gpu offloading?
     
 add_indentation()
 

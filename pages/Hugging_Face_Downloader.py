@@ -1,11 +1,11 @@
-# Last updated v0.1.2
+# Last updated v0.1.3-pre1
 # IMPORTS ---------------------------------------------------------------------------------
 import requests, streamlit as st
 st.set_page_config(layout="wide")
 from pathlib import Path
 from st_pages import add_indentation
 from util.scheduler import *
-from util.paths import *
+from util.utils import get_files_from_repo
 
 # FUNCTIONS ---------------------------------------------------------------------------------
 
