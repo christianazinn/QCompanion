@@ -1,6 +1,6 @@
-# Last updated v0.1.2
+# Last updated v0.1.3
 # IMPORTS ---------------------------------------------------------------------------------
-import os, streamlit as st
+import streamlit as st
 st.set_page_config(layout="wide")
 from pathlib import Path
 from st_pages import add_indentation
@@ -22,7 +22,6 @@ def trigger_command(modelpath, options, imatrix, nthreads):
     modelpath_path = Path(modelpath)
     model_name_only, model_file = modelpath_path.parts[-3], modelpath_path.name
     base_dir = models_dir() / model_name_only
-    imatrix_dir = base_dir / 'imatrix'
     medium_precision_dir = base_dir / 'Medium-Precision-Quantization'
     medium_precision_dir.mkdir(parents=True, exist_ok=True)
                
@@ -32,7 +31,7 @@ def trigger_command(modelpath, options, imatrix, nthreads):
             modified_model_file = model_file.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')
             output_path = medium_precision_dir / f"{modified_model_file}{option.upper()}.GGUF"
 
-            debug_command_str = queue_command(source_path, output_path, option, imatrix_dir / imatrix, nthreads)
+            debug_command_str = queue_command(source_path, output_path, option, imatrix, nthreads)
             debug_output += f"Scheduled: {debug_command_str}\n"
 
     return debug_output if debug_output else "No options selected."
@@ -51,7 +50,6 @@ def queue_command(source_path, output_path, option, imatrix, nthreads):
     return " ".join(command)
 
 # UI CODE ---------------------------------------------------------------------------------
-# TODO can you do gpu offloading?
     
 add_indentation()
 

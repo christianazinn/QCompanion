@@ -1,4 +1,4 @@
-# Last updated v0.1.2
+# Last updated v0.1.3
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 st.set_page_config(layout="wide")
@@ -23,8 +23,6 @@ with schcols[0]:
     update_active()
     st.write(st.session_state["active"])
 
-# TODO ensure requeue works AND the scheduler doesn't stop the current job when you toggle it off
-# TODO test aesthetics of new layout
 # TODO haunted bug - you need to refresh via another button when you activate it but not when you deactivate it
 with schcols[1]:
     if st.button("Toggle Scheduler", on_click=get_scheduler().toggle):
@@ -43,7 +41,7 @@ with schcols[1]:
         st.rerun()
 
 # functionality you need:
-# TODO be able to queue later jobs for files that don't yet exist (i.e. convert then quantize) and handle errors in ordering
+# TODO eventually be able to handle errors if prequeued (Full_Pipeline.py) jobs are deleted and it breaks the chain
 
 st.write('----')
 

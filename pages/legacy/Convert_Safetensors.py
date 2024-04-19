@@ -1,4 +1,4 @@
-# Last updated v0.1.2
+# Last updated v0.1.3
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 st.set_page_config(layout="wide")
@@ -61,7 +61,6 @@ def queue_command(model_folder, out_type, input_dir, target_dir, vocab, ctx, pad
 
 
 # UI CODE ---------------------------------------------------------------------------------
-# TODO can you do gpu offloading?
 
 add_indentation()
 
