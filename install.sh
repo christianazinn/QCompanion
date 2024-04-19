@@ -84,6 +84,11 @@ clone_and_make_llama_cpp() {
     echo "Cloned llama.cpp and ran make in the llama.cpp directory"
 }
 
+# Function to clone llama-factory
+clone_llama_factory() {
+    git clone https://github.com/hiyouga/LLaMA-Factory.git
+}
+
 # END message when the installation is completed
 END_MESSAGE="QCompanion successfully installed. Start with the start.sh script or by running streamlit serve Homepage.py in your terminal."
 
@@ -100,6 +105,7 @@ main() {
     install_packages "$OS"
     check_python "$OS"
     clone_and_make_llama_cpp
+    clone_llama_factory
     create_python_venv
     activate_venv
     pip_dependencies

@@ -1,7 +1,7 @@
-llama.cpp/*
-logs/*
-.vscode/*
-testing/*
+llama.cpp
+LLaMA-Factory
+logs
+.vscode
+testing
 util/*.txt
-util/__pycache__/*
-pages/__pycache__/*
+*/__pycache__
