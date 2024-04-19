@@ -47,7 +47,7 @@ def trigger_convert(model_folder, options, vocab, ctx, pad, skip):
 # Imatrix scheduler
 def trigger_imatrix(gguf_base, data, c, b, ngl, t):
     outfile = get_imatrix_filepath(gguf_base, data)
-    data_path = data_dir() / data
+    data_path = imatrix_data_dir() / data
     # gguf_base IS model_path
 
     command = ["llama.cpp/imatrix", "-m", str(gguf_base), "-f", str(data_path), "-o", str(outfile), "--verbosity", "2",
@@ -220,7 +220,7 @@ if imatrix:
         high_precision_gguf_files = list_gguf_files()
         imatrix_selected_gguf_file = st.selectbox("Select a high precision GGUF File", high_precision_gguf_files, key="imatrix_select_gguf")
 
-    data_files = list_data_files()
+    data_files = list_imatrix_data_files()
     selected_data_file = st.selectbox("Select training data", data_files, key="imatrix_select_data")
 
     with st.expander("Options/flags for imatrix creation"):

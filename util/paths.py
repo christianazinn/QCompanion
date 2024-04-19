@@ -1,4 +1,4 @@
-# Last updated v0.1.3
+# Last updated v0.2.0-pre1
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 import streamlit as st, os
@@ -13,12 +13,22 @@ def llama_cpp_dir():
 # get the models dir, cached
 @st.cache_data
 def models_dir():
-    return Path("llama.cpp/models")
+    return Path("user/models")
+
+# get the imatrix data dir, cached
+@st.cache_data
+def imatrix_data_dir():
+    return Path("user/imatrix_data")
+
+# get the llamafactory dir, cached
+@st.cache_data
+def llamafactory_dir():
+    return Path("LLaMA-Factory")
 
 # get the data dir, cached
 @st.cache_data
 def data_dir():
-    return Path("llama.cpp/data")
+    return Path("user/data")
 
 # List valid, selectable GGUF files in the models directory
 def list_gguf_files():
@@ -43,10 +53,10 @@ def list_modelspecific_files(intype):
     return files
 
 # List valid, selectable data files in the data directory
-def list_data_files():
+def list_imatrix_data_files():
     data_files = []
-    if os.path.exists(data_dir()):
-        for file in os.listdir(data_dir()):
+    if os.path.exists(imatrix_data_dir()):
+        for file in os.listdir(imatrix_data_dir()):
             if file.lower().endswith('.dat') or file.lower().endswith('.txt'):
                 data_files.append(file)
     return data_files

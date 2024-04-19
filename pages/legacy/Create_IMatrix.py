@@ -19,7 +19,7 @@ def trigger_command(selected_gguf_file, selected_training_data, c, b, ngl, t):
     modified_model_file = f"{model_file.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')}imatrix-{modified_data}.dat"
 
     output_path = imatrix_dir / modified_model_file
-    data_path = data_dir() / selected_training_data
+    data_path = imatrix_data_dir() / selected_training_data
     model_path = models_dir() / model_name_only / 'High-Precision-Quantization' / model_file
 
     command = ["llama.cpp/imatrix", "-m", str(model_path), "-f", str(data_path), "-o", str(output_path), "--verbosity", "2",
@@ -43,7 +43,7 @@ gguf_files = list_gguf_files()
 
 selected_gguf_file = st.selectbox("Select a GGUF File", gguf_files)
 
-data_files = list_data_files()
+data_files = list_imatrix_data_files()
 
 selected_training_data = st.selectbox("Select training data", data_files)
 

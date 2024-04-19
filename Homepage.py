@@ -1,5 +1,5 @@
 # main.py
-# Version 0.1.3-pre3: Refactor to use a unified queuer for all quantization pipeline tasks
+# Version 0.2.0-pre1: Finetune scaffolding
 import streamlit as st
 st.set_page_config(layout="wide")
 from st_pages import Page, Section, show_pages, add_indentation
@@ -15,6 +15,8 @@ pages_to_show = [
     Section("Manually convert models", icon=":open_hands:"),
     Page("pages/Full_Pipeline.py", "Full Pipeline Queue", ":arrows_clockwise:"),
     Page("pages/Queue_GUI.py", "Queue GUI", ":arrows_counterclockwise:"),
+    Section("Finetune models", icon=":rocket:"),
+    Page("pages/Finetuning.py", "Finetuning", ":rocket:"),
     Section("Extra Tools", icon=":toolbox:"),
     Page("pages/HF_Token_Encrypter.py", "Security", ":lock:"),
 ]
