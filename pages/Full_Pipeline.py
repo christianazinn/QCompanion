@@ -1,4 +1,4 @@
-# Last updated v0.1.3-pre2
+# Last updated v0.1.3
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 st.set_page_config(layout="wide")
@@ -69,8 +69,8 @@ def trigger_quantize(model_path, options, imatrix, nthreads):
     med_precision_outdir = get_med_precision_outdir(gguf_path.parts[-3])
     for option, selected in options.items():
         if selected:
-            modified_model_file = gguf_path.name.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')
-            output_path = med_precision_outdir / f"{modified_model_file}{option.upper()}.GGUF"
+            modified_model_file = modify_model_file(gguf_path.name.lower())
+            output_path = med_precision_outdir / f"{modified_model_file}-{option.upper()}.GGUF"
 
             command = [str(llama_cpp_dir() / 'quantize'), "--allow-requantize", str(model_path), str(output_path), option]
 
@@ -144,22 +144,19 @@ with optcols[4]:
 if download:
     st.write("----")
     st.markdown("### Download from HuggingFace")
-    model_name = st.text_input("Download PyTorch models from Huggingface", "Use the HuggingfaceUsername/Modelname")
+    model_name = st.text_input("Download Safetensors format models from Huggingface", "Model_Creator/Model_Name")
     if st.button("Get File List"):
         _, file_links = get_files_from_repo(f"https://huggingface.co/api/models/{model_name}/tree/main", model_name)
         if file_links:
-            st.session_state['file_links_dict'] = file_links
             st.session_state['model_name'] = model_name
             files_info = "\n".join(f"{name}, Size: {size}" for name, size in file_links.items())
             st.text_area("Files Information", files_info, height=300)
         else:
             st.error("Unable to retrieve file links.")
-            if 'file_links_dict' in st.session_state:
-                del st.session_state['file_links_dict']
+            if 'model_name' in st.session_state:
                 del st.session_state['model_name']
 else: # if download is not selected, remove the file_links_dict and model_name from the session state
-    if 'file_links_dict' in st.session_state:
-        del st.session_state['file_links_dict']
+    if 'model_name' in st.session_state:
         del st.session_state['model_name']
 
 # Convert
@@ -172,6 +169,7 @@ if convert:
             st.markdown(f"Using to-be-created model directory `{models_dir() / convert_model_folder}`")
         else:
             st.error("Please choose a model to download first.")
+            convert_model_folder = None
     else:
         convert_model_folders = [f.name for f in models_dir().iterdir() if f.is_dir()] if models_dir().exists() else ["Directory not found"]
         convert_model_folder = st.selectbox("Select a model folder", convert_model_folders, key="convert_select_folder")
@@ -210,6 +208,7 @@ if imatrix:
         num_selected_high_precision = sum(1 for value in conversion_options.values() if value)
         if num_selected_high_precision == 0:
             st.error('Please select at least one high precision conversion option, or deselect the "Convert" option.')
+            imatrix_selected_gguf_file = None
         elif num_selected_high_precision == 1:
             for option, selected in conversion_options.items():
                 if selected:
@@ -252,6 +251,7 @@ if quantize:
         num_selected_high_precision = sum(1 for value in conversion_options.values() if value)
         if num_selected_high_precision == 0:
             st.error('Please select at least one high precision conversion option, or deselect the "Convert" option.')
+            quantize_selected_gguf_file = None
         elif num_selected_high_precision == 1:
             for option, selected in conversion_options.items():
                 if selected:
@@ -281,10 +281,13 @@ if quantize:
 
         with quantize_optcols[0]:
             quantize_use_imatrix = st.checkbox("Use importance matrix, --imatrix", key="quantize_imatrix")
-            if imatrix and selected_data_file:
-                selected_imatrix = get_imatrix_filepath(imatrix_selected_gguf_file, selected_data_file)
-            elif imatrix:
-                st.error("Please select training data for the to-be-created importance matrix first.")
+            if imatrix:
+                if not imatrix_selected_gguf_file:
+                    st.error("Please select a high precision GGUF file for the to-be-created importance matrix first.")
+                if not selected_data_file:
+                    st.error("Please select training data for the to-be-created importance matrix first.")
+                if imatrix_selected_gguf_file and selected_data_file:
+                    selected_imatrix = get_imatrix_filepath(imatrix_selected_gguf_file, selected_data_file)
             else:
                 imatrix_files = list_imatrix_files()
                 selected_imatrix = st.selectbox("Select imatrix file", imatrix_files, disabled=not quantize_use_imatrix, key="quantize_select_imatrix")
@@ -313,6 +316,9 @@ if upload:
             for option, selected in (ioptions | koptions | legacy_options).items():
                 if selected:
                     selected_files_mp.append(get_med_precision_outfile(Path(quantize_selected_gguf_file).name, option))
+
+            # TODO maybe allow the user to select which of the resulting files to upload?
+            # TODO for the future: upload imatrix, upload README automatically, upload whole directory at once
     else:
         # Select another model
         all_models = list(set(high_precision_files.keys()) | set(medium_precision_files.keys()))
@@ -333,13 +339,57 @@ if upload:
         encrypted_token = st.text_input("Enter Encrypted Token", type="password")
         if encrypted_token:
             hf_token = decrypt_token(encrypted_token)
+        else:
+            hf_token = None
 
 # QUEUE IT ALLLLLLLLLLLLLL --------------------------------------------------------------
 
 if st.button("Queue All"):
+
     valid = True
+
     # manage logic to block queueing if input is bad
-    # TODO - this has to happen first before anything gets queued
+    # this has to happen first before anything gets queued
+    if download:
+        if not 'model_name' in st.session_state:
+            st.error("Please choose a model to download first.")
+            valid = False
+    if convert:
+        # this can actually happen because of how finnicky session state is
+        if not convert_model_folder and 'model_name' in st.session_state:
+            st.error("Please choose a model to download first.")
+            valid = False
+        if not any(conversion_options.values()):
+            st.error("Please select at least one quantization type before running commands.")
+            valid = False
+    if imatrix:
+        if not imatrix_selected_gguf_file:
+            st.error("Please select a high precision GGUF file for the to-be-created importance matrix first.")
+            valid = False
+        if not selected_data_file:
+            st.error("Please select training data for the to-be-created importance matrix first.")
+            valid = False
+    if quantize:
+        if not quantize_selected_gguf_file:
+            st.error("Please select a high precision GGUF file to be quantized from.")
+            valid = False
+        if not (any((ioptions | koptions | legacy_options).values())):
+            st.error("Please select at least one quantization type before running commands.")
+            valid = False
+        if quantize_use_imatrix and not selected_imatrix:
+            st.error("Please select an importance matrix file.")
+            valid = False
+    if upload:
+        if not hf_token:
+            st.error("Please provide a Hugging Face token.")
+            valid = False
+        if (quantize or convert) and not (selected_files_hp or selected_files_mp):
+            st.error("Please quantize/convert files to upload.")
+            valid = False
+        if not (quantize or convert) and not selected_files:
+            st.error("Please select files to upload.")
+            valid = False
+
     # manage logic to queue the correct steps
     if valid:
         if download:

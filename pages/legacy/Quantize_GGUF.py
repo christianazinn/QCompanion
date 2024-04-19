@@ -1,6 +1,6 @@
-# Last updated v0.1.3-pre2
+# Last updated v0.1.3
 # IMPORTS ---------------------------------------------------------------------------------
-import os, streamlit as st
+import streamlit as st
 st.set_page_config(layout="wide")
 from pathlib import Path
 from st_pages import add_indentation

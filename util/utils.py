@@ -1,4 +1,4 @@
-# Last updated v0.1.3-pre2
+# Last updated v0.1.3
 # IMPORTS ---------------------------------------------------------------------------------
 import requests, re
 from util.paths import *
@@ -44,13 +44,14 @@ def get_med_precision_outdir(model_folder):
 # Return a high precision outfile path given model folder and conversion option for Full_Pipeline.py
 # model_folder is just the NAME of the folder, not its path
 def get_high_precision_outfile(model_folder, option):
+    model_folder = modify_model_file(model_folder)
     return str(get_high_precision_outdir(model_folder) / f"{model_folder}-{option.lower()}.GGUF")
 
 # Return a medium precision outfile path given model folder and conversion option for Full_Pipeline.py
 # model_folder is just the NAME of the folder, not its path
 def get_med_precision_outfile(model_folder, option):
-    model_file = model_folder.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')
-    return str(get_med_precision_outdir(model_folder) / f"{model_file}{option.upper()}.GGUF")
+    model_file = modify_model_file(model_folder.lower())
+    return str(get_med_precision_outdir(model_folder) / f"{model_file}-{option.upper()}.GGUF")
 
 # Return an imatrix filepath given the original GGUF and the data to train it on for Full_Pipeline.py
 def get_imatrix_filepath(selected_gguf_file, selected_training_data):
@@ -61,7 +62,7 @@ def get_imatrix_filepath(selected_gguf_file, selected_training_data):
     imatrix_dir.mkdir(parents=True, exist_ok=True)
 
     modified_data = re.search(r'^.*(?=\.)', selected_training_data)[0]
-    modified_model_file = f"{model_file.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')}imatrix-{modified_data}.dat"
+    modified_model_file = f"{modify_model_file(model_file.lower())}-imatrix-{modified_data}.dat"
 
     return imatrix_dir / modified_model_file
 
@@ -76,3 +77,7 @@ def list_model_files(subfolder):
             if specific_folder.exists() and specific_folder.is_dir():
                 model_files[model_folder.name] = [file.name for file in specific_folder.iterdir() if file.is_file()]
     return model_files
+
+# List files in High-Precision and Medium-Precision folders
+def modify_model_file(model_file):
+    return model_file.lower().replace('-f16.gguf', '').replace('-q8_0.gguf', '').replace('-f32.gguf', '')

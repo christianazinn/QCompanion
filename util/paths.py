@@ -1,4 +1,4 @@
-# Last updated v0.1.3-pre1
+# Last updated v0.1.3
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 import streamlit as st, os

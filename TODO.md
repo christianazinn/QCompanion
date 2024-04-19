@@ -1,9 +1,11 @@
 TODO allow gpu offload for certain tasks
 TODO Lilac integration?
+TODO be able to handle errors in ordering in the megaqueuer
+TODO README creation from template/from original model template
+TODO upload whole directory at once with megaqueuer
+TODO allow the user to select which files to upload in the megaqueuer?
 
 # ON DECK
-TODO be able to queue later jobs for files that don't yet exist (i.e. convert then quantize) and handle errors in ordering/make a page for it
-TODO readme creation from template!
 TODO HF token for download?
 TODO LLaMA-Factory integration
 
