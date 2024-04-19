@@ -1,4 +1,4 @@
-# Last updated v0.1.3-pre1
+# Last updated v0.1.3-pre2
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 st.set_page_config(layout="wide")
@@ -23,8 +23,6 @@ with schcols[0]:
     update_active()
     st.write(st.session_state["active"])
 
-# TODO ensure requeue works AND the scheduler doesn't stop the current job when you toggle it off
-# TODO test aesthetics of new layout
 # TODO haunted bug - you need to refresh via another button when you activate it but not when you deactivate it
 with schcols[1]:
     if st.button("Toggle Scheduler", on_click=get_scheduler().toggle):

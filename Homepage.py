@@ -1,5 +1,5 @@
 # main.py
-# Version 0.1.3-pre1: First bits of full pipeline UI code
+# Version 0.1.3-pre2: Full pipeline page mostly done, still need blocking logic and refactor
 import streamlit as st
 st.set_page_config(layout="wide")
 from st_pages import Page, Section, show_pages, add_indentation

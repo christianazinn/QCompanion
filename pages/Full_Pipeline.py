@@ -1,4 +1,4 @@
-# Last updated v0.1.3-pre1
+# Last updated v0.1.3-pre2
 # IMPORTS ---------------------------------------------------------------------------------
 import streamlit as st
 st.set_page_config(layout="wide")
@@ -7,8 +7,109 @@ from util.constants import config
 from util.scheduler import *
 from util.paths import *
 from util.utils import *
+from util.key import decrypt_token
 
 # FUNCTIONS ---------------------------------------------------------------------------------
+
+# Download scheduler
+def trigger_download(model_name):
+    command = ["python3", "util/download.py", model_name]
+    get_scheduler().add_job(command)
+
+# Convert scheduler
+def trigger_convert(model_folder, options, vocab, ctx, pad, skip):
+    for option, selected in options.items():
+        if selected:
+            outfile = f"{model_folder}-{option.lower()}.GGUF"
+            script_path = llama_cpp_dir() / "convert.py"
+
+            command = [
+                "python3", str(script_path),
+                str(models_dir() / model_folder),
+                "--outfile", str(get_high_precision_outdir(model_folder) / outfile),
+                "--outtype", option.lower()
+            ]
+
+            if vocab:
+                command.extend(["--vocabtype", vocab])
+
+            if ctx:
+                command.extend(["--ctx", str(ctx)])
+
+            if pad:
+                command.append("--pad-vocab")
+
+            if skip:
+                command.append("--skip-unknown")
+
+            get_scheduler().add_job(command)
+
+# Imatrix scheduler
+def trigger_imatrix(gguf_base, data, c, b, ngl, t):
+    outfile = get_imatrix_filepath(gguf_base, data)
+    data_path = data_dir() / data
+    # gguf_base IS model_path
+
+    command = ["llama.cpp/imatrix", "-m", str(gguf_base), "-f", str(data_path), "-o", str(outfile), "--verbosity", "2",
+               "-c", str(c), "-b", str(b)]
+    
+    if ngl:
+        command.extend(["-ngl", str(ngl)])
+
+    if t:
+        command.extend(["-t", str(t)])
+
+    get_scheduler().add_job(command)
+
+
+# Quantize scheduler
+def trigger_quantize(model_path, options, imatrix, nthreads):
+    # source_path IS model_path
+    gguf_path = Path(model_path)
+    med_precision_outdir = get_med_precision_outdir(gguf_path.parts[-3])
+    for option, selected in options.items():
+        if selected:
+            modified_model_file = gguf_path.name.lower().replace('f16.gguf', '').replace('q8_0.gguf', '').replace('f32.gguf', '')
+            output_path = med_precision_outdir / f"{modified_model_file}{option.upper()}.GGUF"
+
+            command = [str(llama_cpp_dir() / 'quantize'), "--allow-requantize", str(model_path), str(output_path), option]
+
+            if imatrix:
+                command.insert(1, "--imatrix")
+                command.insert(2, str(imatrix))
+
+            if nthreads:
+                command.extend([str(nthreads)])
+
+            get_scheduler().add_job(command)
+
+# Upload scheduler
+# unlike the others you HAVE to provide files_to_upload as a list of FILE NAMES not PATHS
+def trigger_upload(token, repo_name, files_to_upload, high_precision_files, medium_precision_files, selected_model):
+    
+    final_upload = []
+
+    # Rename particular filepaths
+    for file_name in files_to_upload:
+        if file_name in high_precision_files.get(selected_model, []):
+            folder_path = get_high_precision_outdir(selected_model)
+        elif file_name in medium_precision_files.get(selected_model, []):
+            folder_path = get_med_precision_outdir(selected_model)
+        else:
+            continue
+
+        file_path = folder_path / file_name
+        final_upload.append(str(file_path))
+
+    command = ["python3", "util/upload.py", token, repo_name, *final_upload]
+    get_scheduler().add_job(command)
+
+# Autoupload scheduler
+# Here you have to provide the selected_files_hp and selected_files_mp as a list of PATHS
+def trigger_upload_auto(token, repo_name, selected_files_hp, selected_files_mp):
+    final_upload = [file for file in selected_files_hp + selected_files_mp]
+    command = ["python3", "util/upload.py", token, repo_name, *final_upload]
+    get_scheduler().add_job(command)
 
 # UI CODE ---------------------------------------------------------------------------------
 
@@ -40,7 +141,6 @@ with optcols[4]:
     upload = st.checkbox("Upload")
 
 # Download
-# DONE
 if download:
     st.write("----")
     st.markdown("### Download from HuggingFace")
@@ -63,15 +163,13 @@ else: # if download is not selected, remove the file_links_dict and model_name f
         del st.session_state['model_name']
 
 # Convert
-# TODO
 if convert:
     st.write("----")
     st.markdown("### Convert Safetensors to High Precision")
     if download: # automatically determine where download.py will download it
         if 'model_name' in st.session_state:
-            original_model_name = st.session_state['model_name'].split("/")[1]
-            convert_model_folder = models_dir() / original_model_name
-            st.markdown(f"Using to-be-created model directory `{convert_model_folder}`")
+            convert_model_folder = st.session_state['model_name'].split("/")[1]
+            st.markdown(f"Using to-be-created model directory `{models_dir() / convert_model_folder}`")
         else:
             st.error("Please choose a model to download first.")
     else:
@@ -105,7 +203,6 @@ if convert:
             conversion_use_skip = st.checkbox("Skip unknown, --skip-unknown", key="convert_skip")
 
 # Imatrix
-# TODO
 if imatrix:
     st.write("----")
     st.markdown("### Imatrix Creation")
@@ -148,7 +245,6 @@ if imatrix:
             imatrix_t = st.number_input("Number of threads to use, -t", value=4, disabled=not imatrix_use_t, key="imatrix_t")
 
 # Quantize
-# TODO
 if quantize:
     st.write("----")
     st.markdown("### Quantize GGUF")
@@ -160,13 +256,12 @@ if quantize:
             for option, selected in conversion_options.items():
                 if selected:
                     quantize_selected_gguf_file = get_high_precision_outfile(convert_model_folder, option)
-                    # TODO rework get_high_precision_oufile when you bring trigger_commands over
         else:
             high_precision_gguf_files = [get_high_precision_outfile(convert_model_folder, option) for option, selected in conversion_options.items() if selected]
-            quantize_selected_gguf_file = st.selectbox("Select a high precision GGUF file to be created", high_precision_gguf_files, key="quantize_select_gguf_multiple")
+            quantize_selected_gguf_file = st.selectbox("Select a high precision GGUF file to be quantized from", high_precision_gguf_files, key="quantize_select_gguf_multiple")
     else:
         high_precision_gguf_files = list_gguf_files()
-        quantize_selected_gguf_file = st.selectbox("Select a high precision GGUF File", high_precision_gguf_files, key="quantize_select_gguf")
+        quantize_selected_gguf_file = st.selectbox("Select a high precision GGUF file to be quantized from", high_precision_gguf_files, key="quantize_select_gguf")
 
     icol, kcol, lcol = st.columns(3)
     with icol:
@@ -186,13 +281,12 @@ if quantize:
 
         with quantize_optcols[0]:
             quantize_use_imatrix = st.checkbox("Use importance matrix, --imatrix", key="quantize_imatrix")
-            if imatrix:
-                # TODO make it automatically determine the imatrix file
-                # TODO likewise rework it when you bring over trigger_commands
-                pass
+            if imatrix and selected_data_file:
+                selected_imatrix = get_imatrix_filepath(imatrix_selected_gguf_file, selected_data_file)
+            elif imatrix:
+                st.error("Please select training data for the to-be-created importance matrix first.")
             else:
                 imatrix_files = list_imatrix_files()
-                # TODO the disabling is not working properly
                 selected_imatrix = st.selectbox("Select imatrix file", imatrix_files, disabled=not quantize_use_imatrix, key="quantize_select_imatrix")
 
         with quantize_optcols[1]:
@@ -200,20 +294,71 @@ if quantize:
             quantize_t = st.number_input("Number of threads to use, -nthreads", value=4, disabled=not quantize_use_nthreads, key="quantize_t")
 
 # Upload
-# TODO
 if upload:
+    high_precision_files = list_model_files("High-Precision-Quantization")
+    medium_precision_files = list_model_files("Medium-Precision-Quantization")
+    
     st.write("----")
     st.markdown("### Upload to HuggingFace")
     if quantize or convert:
-        # make it automatically determine the quantized file, hp or mp
-        st.markdown("Placeholder - QorC")
+        selected_files_hp = []
+        selected_files_mp = []
+        if convert:
+            # determine all high precision files
+            for option, selected in conversion_options.items():
+                if selected:
+                    selected_files_hp.append(get_high_precision_outfile(convert_model_folder, option))
+        if quantize:
+            # determine all medium precision files
+            for option, selected in (ioptions | koptions | legacy_options).items():
+                if selected:
+                    selected_files_mp.append(get_med_precision_outfile(Path(quantize_selected_gguf_file).name, option))
     else:
-        # give the user to choose a local quantized folder, hp or mp
-        st.markdown("Placeholder - NQorC")
-    # still need like token and such
-    st.markdown("Placeholder")
+        # Select another model
+        all_models = list(set(high_precision_files.keys()) | set(medium_precision_files.keys()))
+        selected_model = st.selectbox("Select a Model", all_models, index=0)
+
+        # File selection multiselect
+        combined_files = high_precision_files.get(selected_model, []) + medium_precision_files.get(selected_model, [])
+        selected_files = st.multiselect("Select Files to Upload", combined_files, key="file_selector")
+
+    # Repository details and README content
+    repo_name = st.text_input("Repository Name", value="Repository Name")
+
+    # Token input
+    use_unencrypted_token = st.checkbox("Unencrypted Token")
+    if use_unencrypted_token:
+        hf_token = st.text_input("Hugging Face Token", type="password")
+    else:
+        encrypted_token = st.text_input("Enter Encrypted Token", type="password")
+        if encrypted_token:
+            hf_token = decrypt_token(encrypted_token)
+
+# QUEUE IT ALLLLLLLLLLLLLL --------------------------------------------------------------
 
 if st.button("Queue All"):
+    valid = True
     # manage logic to block queueing if input is bad
+    # TODO - this has to happen first before anything gets queued
     # manage logic to queue the correct steps
-    pass
+    if valid:
+        if download:
+            trigger_download(model_name)
+        if convert:
+            trigger_convert(convert_model_folder, conversion_options, 
+                            conversion_vocab if conversion_use_vocab else None, 
+                            conversion_c if conversion_use_c else None, 
+                            conversion_use_pad, conversion_use_skip)
+        if imatrix:
+            trigger_imatrix(imatrix_selected_gguf_file, selected_data_file, 
+                            imatrix_c, imatrix_b, imatrix_ngl if imatrix_use_ngl else None, 
+                            imatrix_t if imatrix_use_t else None)
+        if quantize:
+            trigger_quantize(quantize_selected_gguf_file, ioptions | koptions | legacy_options, 
+                            selected_imatrix if quantize_use_imatrix else None, 
+                            quantize_t if quantize_use_nthreads else None)
+        if upload and (quantize or convert):
+            trigger_upload_auto(hf_token, repo_name, selected_files_hp, selected_files_mp)
+        elif upload:
+            trigger_upload(hf_token, repo_name, selected_files, 
+                            high_precision_files, medium_precision_files, selected_model)
