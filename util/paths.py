@@ -1,4 +1,4 @@
-# Last updated v0.2.0-pre1
+# Last updated v0.2.0-pre2
 # IMPORTS ---------------------------------------------------------------------------------
 from pathlib import Path
 import streamlit as st, os
@@ -19,16 +19,6 @@ def models_dir():
 @st.cache_data
 def imatrix_data_dir():
     return Path("user/imatrix_data")
-
-# get the llamafactory dir, cached
-@st.cache_data
-def llamafactory_dir():
-    return Path("LLaMA-Factory")
-
-# get the data dir, cached
-@st.cache_data
-def data_dir():
-    return Path("user/data")
 
 # List valid, selectable GGUF files in the models directory
 def list_gguf_files():
@@ -60,3 +50,30 @@ def list_imatrix_data_files():
             if file.lower().endswith('.dat') or file.lower().endswith('.txt'):
                 data_files.append(file)
     return data_files
+
+# FUNCTIONS - LLAMAFACTORY -----------------------------------------------------------------
+
+# get the llamafactory dir, cached
+@st.cache_data
+def llamafactory_dir():
+    return Path("LLaMA-Factory")
+
+# get the data dir, cached
+@st.cache_data
+def data_dir():
+    return Path("user/data")
+
+# get the lora adapter save dir, cached
+@st.cache_data
+def save_dir(*args):
+    return os.path.join(Path("user/saves"), *args)
+
+# get the config dir, cached
+@st.cache_data
+def config_dir():
+    return Path("user/config")
+
+# get the cache dir, cached
+@st.cache_data
+def cache_dir():
+    return Path("user/cache")

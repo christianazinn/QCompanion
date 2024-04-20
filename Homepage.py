@@ -1,5 +1,5 @@
 # main.py
-# Version 0.2.0-pre1: Finetune scaffolding
+# Version 0.2.0-pre2: Code mostly functional for finetune pipeline
 import streamlit as st
 st.set_page_config(layout="wide")
 from st_pages import Page, Section, show_pages, add_indentation
